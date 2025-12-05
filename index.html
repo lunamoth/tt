@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 4. 보안 강화: CSP 메타 태그 (엄격한 적용) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    <title>✂️ 타래 재단사</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-light: #818cf8;
+            --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --gray-color: #666;
+            --border-color: #e2e8f0;
+            --right-panel-bg: rgba(248, 249, 250, 0.5);
+            --input-bg: #fff;
+            --border-radius: 16px;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --avatar-bg: #e0e7ff;
+        }
+
+        /* 다크 모드 (시스템 설정 + 수동 토글 지원) */
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #2d1b4e 0%, #1e293b 100%);
+            --card-bg: rgba(30, 41, 59, 0.95);
+            --text-color: #f1f5f9;
+            --gray-color: #94a3b8;
+            --border-color: #475569;
+            --right-panel-bg: rgba(15, 23, 42, 0.5);
+            --input-bg: #0f172a;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            --avatar-bg: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background: var(--bg-gradient);
+            height: 100vh; 
+            height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-color);
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        .container {
+            background: var(--card-bg);
+            width: 96vw; 
+            height: 94vh;
+            max-width: none;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        /* 다크 모드 토글 버튼 */
+        .theme-toggle-btn {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background: var(--input-bg);
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .theme-toggle-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            background: linear-gradient(to right, #6366f1, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            font-size: 1.05rem;
+            color: var(--gray-color);
+        }
+
+        .layout-wrapper {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            flex: 1;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .left-panel, .right-panel {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .right-panel {
+            background: var(--right-panel-bg);
+            border-radius: 12px;
+            padding: 15px;
+            max-height: none;
+            border: 1px solid var(--border-color);
+        }
+
+        .left-panel::-webkit-scrollbar,
+        .right-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        .left-panel::-webkit-scrollbar-thumb,
+        .right-panel::-webkit-scrollbar-thumb {
+            background-color: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+
+        .preset-wrapper {
+            background: var(--right-panel-bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .preset-btn {
+            flex: 1;
+            background: var(--input-bg);
+            border: 2px solid var(--border-color);
+            color: var(--gray-color);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .preset-btn span.limit-badge {
+            font-size: 0.85rem;
+            font-weight: normal;
+            opacity: 0.8;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--primary-light);
+            color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .preset-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.25);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            background: var(--right-panel-bg);
+            padding: 15px;
+            border-radius: 12px;
+            flex-wrap: wrap; 
+            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 120px; 
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--gray-color);
+            margin-bottom: 5px;
+        }
+
+        input[type="number"], 
+        input[type="text"],
+        select {
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+            width: 100%;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            border-color: var(--primary-color);
+        }
+
+        #customFormatInput {
+            margin-top: 5px;
+            display: none;
+            font-size: 0.9rem;
+        }
+        #customFormatInput.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            resize: none;
+            font-size: 1.15rem;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s, background-color 0.2s;
+            font-family: inherit;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+        
+        textarea.drag-over {
+            border-color: var(--primary-color);
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        textarea:focus {
+            border-color: var(--primary-color);
+        }
+
+        .action-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .buttons-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .char-count {
+            font-size: 1.0rem;
+            color: var(--gray-color);
+        }
+
+        button.split-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
+        }
+
+        button.split-btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        button.split-btn:active {
+            transform: translateY(0);
+        }
+
+        button.reset-btn {
+            background: var(--input-bg);
+            color: var(--gray-color);
+            border: 2px solid var(--border-color);
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.reset-btn:hover {
+            background: var(--right-panel-bg);
+            color: #ef4444; 
+            border-color: #ef4444;
+            transform: translateY(-2px);
+        }
+        
+        /* 파일 업로드 버튼 스타일 (Reset 버튼 상속) */
+        button.file-btn {
+            background: var(--input-bg);
+            color: var(--gray-color);
+            border: 2px solid var(--border-color);
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button.file-btn:hover {
+            background: var(--right-panel-bg);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        button.reset-btn:active, button.file-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results-header-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .copy-all-btn, .download-btn {
+            flex: 1;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: opacity 0.2s;
+        }
+
+        .download-btn {
+            background: var(--gray-color);
+            flex: 0.4;
+        }
+
+        .copy-all-btn:hover, .download-btn:hover {
+            opacity: 0.9;
+        }
+
+        .results {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: var(--gray-color);
+            padding: 40px 0;
+            font-size: 1.05rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .tweet-card {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: fadeIn 0.5s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tweet-card.warning {
+            border-color: #f59e0b;
+            border-width: 2px;
+        }
+
+        .tweet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-color: var(--primary-light);
+        }
+
+        .mockup-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+
+        .mockup-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--avatar-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .mockup-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .mockup-name {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        .mockup-handle {
+            font-size: 0.85rem;
+            color: var(--gray-color);
+        }
+
+        .card-meta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .badge {
+            background: #f0fdf4;
+            color: #16a34a;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .badge.warn {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        [data-theme="dark"] .badge {
+            background: #14532d;
+            color: #86efac;
+        }
+        [data-theme="dark"] .badge.warn {
+            background: #451a03;
+            color: #fbbf24;
+        }
+
+        .card-content {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+
+        .copy-btn {
+            background: var(--right-panel-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            width: 100%;
+            justify-content: center;
+            margin-top: auto;
+        }
+
+        .copy-btn:hover {
+            background: var(--border-color);
+        }
+
+        .copy-btn.copied {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        
+        [data-theme="dark"] .copy-btn.copied {
+            background: #14532d;
+            color: #86efac;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background: var(--input-bg);
+            padding: 8px 20px;
+            border-radius: 30px;
+            margin-top: 15px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 추가된 개인정보 안내 문구 스타일 */
+        .privacy-notice {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 10px;
+            padding-top: 5px;
+            font-size: 0.95rem;
+            color: var(--gray-color);
+            flex-shrink: 0;
+            line-height: 1.4;
+        }
+
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 17px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+
+        [data-theme="dark"] #toast {
+            background-color: #f1f5f9;
+            color: #333;
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            body { 
+                height: auto; 
+                min-height: 100dvh; 
+                overflow: auto; 
+            }
+            .container { 
+                height: auto; 
+                min-height: 90vh; 
+                width: 100%; 
+                padding: 20px; 
+            }
+            .layout-wrapper { 
+                flex-direction: column; 
+                overflow: visible; 
+            }
+            .left-panel, .right-panel { 
+                height: auto; 
+                overflow: visible; 
+            }
+            h1 { font-size: 1.5rem; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .input-group { width: 100%; }
+            .right-panel { background: transparent; border: none; padding: 0; }
+            textarea { height: auto; min-height: 250px; flex: none; }
+            .preset-buttons { gap: 5px; }
+            .preset-btn { font-size: 0.8rem; padding: 8px; }
+            .theme-toggle-btn { top: -10px; right: -10px; padding: 6px 10px; }
+            .status-bar { flex-direction: column; gap: 5px; text-align: center; border-radius: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1 id="appTitle">✂️ 타래 재단사</h1>
+            <p class="subtitle">왼쪽에 긴 글을 넣으면 오른쪽에 타래가 나타납니다 ✨</p>
+            <button class="theme-toggle-btn" id="themeToggle" aria-label="다크 모드 전환">
+                🌙
+            </button>
+        </header>
+
+        <div class="layout-wrapper">
+            <!-- 왼쪽 패널: 입력 및 설정 -->
+            <div class="left-panel">
+                
+                <div class="preset-wrapper">
+                    <label>✨ 플랫폼 선택 (자동 설정)</label>
+                    <div class="preset-buttons" id="presetContainer">
+                        <button id="btn-bluesky" class="preset-btn active" data-preset="bluesky">
+                            🦋 블루스카이 <span class="limit-badge">300자</span>
+                        </button>
+                        <button id="btn-twitter" class="preset-btn" data-preset="twitter">
+                            🐦 트위터 <span class="limit-badge">280자</span>
+                        </button>
+                        <button id="btn-threads" class="preset-btn" data-preset="threads">
+                            🧵 스레드 <span class="limit-badge">500자</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="controls" id="controlsContainer">
+                    <div class="input-group">
+                        <label for="limit">📏 제한 글자수</label>
+                        <input type="number" id="limit" value="300" min="10" max="2000">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="position">📍 번호 위치</label>
+                        <select id="position">
+                            <option value="front">글 앞 (🧵1/n)</option>
+                            <option value="back" selected>글 뒤 (🧵1/n)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="paragraphMode">📄 문단 유지</label>
+                        <select id="paragraphMode">
+                            <option value="on" selected>켜기 (기본)</option>
+                            <option value="off">끄기 (꽉 채우기)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="numberFormat">🔢 번호 서식</label>
+                        <select id="numberFormat">
+                            <option value="thread" selected>(🧵1/n)</option>
+                            <option value="bracket">[1/n]</option>
+                            <option value="simple">1/n</option>
+                            <option value="paren">(1/n)</option>
+                            <option value="custom">직접 입력...</option>
+                        </select>
+                        <input type="text" id="customFormatInput" placeholder="예: {current}/{total} 페이지">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="urlMode">🔗 URL 단축</label>
+                        <select id="urlMode">
+                            <option value="off" selected>사용 안 함</option>
+                            <option value="on">23자로 계산 (t.co)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <textarea id="inputText" maxlength="50000" placeholder="여기에 긴 글을 붙여넣거나 .txt 파일을 드래그하세요... 📝&#10;나머지는 제가 알아서 할게요!"></textarea>
+
+                <div class="action-area">
+                    <div class="char-count" id="totalCount">현재: 0자</div>
+                    <div class="buttons-group">
+                        <!-- 파일 업로드 버튼 추가 -->
+                        <input type="file" id="fileInput" hidden accept=".txt,text/plain">
+                        <button class="file-btn" id="btn-file">📂 파일</button>
+                        <button class="reset-btn" id="btn-reset">🔄 초기화</button>
+                        <button class="split-btn" id="btn-split">쪼개기 ⚡️</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오른쪽 패널: 결과 영역 -->
+            <div class="right-panel">
+                <div class="results" id="resultsArea">
+                    <div class="empty-state">
+                        <div>왼쪽에 글을 입력하면<br>여기에 결과가 표시됩니다.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상태 표시줄 추가 -->
+        <div class="status-bar" id="statusBar">
+            <div class="status-item">📊 글자 수: <span>0자</span></div>
+            <div class="status-item">📝 단어 수: <span>0개</span></div>
+            <div class="status-item">📑 줄 수: <span>0줄</span></div>
+            <div class="status-item">¶ 문단 수: <span>0개</span></div>
+            <div class="status-item">⏱️ 예상 읽기: <span>0초</span></div>
+            <div class="status-item">🧵 생성된 타래: <span>0개</span></div>
+        </div>
+
+        <!-- 개인정보 안내 문구 추가 -->
+        <div class="privacy-notice">
+            🔒 입력하신 글과 설정값은 브라우저 내부에만 안전하게 저장되며, 외부 서버로 전송되지 않습니다.
+        </div>
+
+        <footer>
+            타래 재단사는 lunamoth 와 제미나이 3.0 프로가 함께 만들었습니다. 🧵 옷감(기능)에 문제가 있거나 새로운 스타일(아이디어)을 원하시면 @lunamoth (블루스카이/트위터/스레드) 에게 살짝 귀띔해 주세요!
+        </footer>
+    </div>
+
+    <div id="toast">✅ 복사 완료!</div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // 1. 상수 및 설정 관리 (매직 넘버/스트링 제거)
+            const CONFIG = {
+                VERSION: "타래 재단사 2.0",
+                STORAGE_KEY: "threadTailorSettings",
+                DRAFT_KEY: "threadTailorDraft",
+                LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
+                URL_WEIGHT: 23,
+                DEBOUNCE_MS: 500,
+                LOOP_LIMIT: 5,
+                TIMEOUT_MS: 3000, // ReDoS 방지 타임아웃
+                REGEX: {
+                    // ReDoS 방지: 부정 전방 탐색을 포함한 URL 패턴
+                    URL_GLOBAL: /https?:\/\/[^\s]+(?<![.,?!:;])/g
+                },
+                MESSAGES: {
+                    EMPTY_STATE: "왼쪽에 글을 입력하면<br>여기에 결과가 표시됩니다.",
+                    EMPTY_INPUT: "⚠️ 텍스트를 입력해주세요!",
+                    LIMIT_ERROR: "⚠️ 최소 10자 이상 설정해주세요!",
+                    RESET_CONFIRM: "모든 내용을 지우고 초기화하시겠습니까?",
+                    RESET_DONE: "🗑️ 초기화되었습니다.",
+                    SETTINGS_DONE: "자 설정 완료",
+                    SPLIT_DONE: "🎉 쪼개기 완료! 첫 번째 글이 복사되었어요 📋",
+                    COPY_ALL: "📑 전체 복사",
+                    SAVE_FILE: "💾 저장",
+                    COPY_BTN: "📋 복사하기",
+                    COPIED: "✅ 복사됨!",
+                    FAIL: "❌ 복사 실패 (권한 확인 필요)",
+                    CLIPBOARD_SUCCESS: "✨ 클립보드에 복사되었어요!",
+                    FILE_ERROR: "❌ 텍스트 파일(.txt)만 읽을 수 있습니다.",
+                    STORAGE_ERROR: "⚠️ 설정 저장 실패 (공간 부족/프라이버시 모드)",
+                    UNBREAKABLE: "⚠️ 너무 긴 단어/URL이 있어 강제로 잘랐습니다."
+                }
+            };
+
+            // 2. DOM 관리 도우미 (보안 강화: innerHTML 제거)
+            class DOMHelper {
+                static getElements() {
+                    return {
+                        html: document.documentElement,
+                        appTitle: document.getElementById('appTitle'),
+                        inputText: document.getElementById('inputText'),
+                        limitInput: document.getElementById('limit'),
+                        positionSelect: document.getElementById('position'),
+                        paragraphModeSelect: document.getElementById('paragraphMode'),
+                        numberFormatSelect: document.getElementById('numberFormat'),
+                        customFormatInput: document.getElementById('customFormatInput'),
+                        urlModeSelect: document.getElementById('urlMode'),
+                        resultsArea: document.getElementById('resultsArea'),
+                        totalCount: document.getElementById('totalCount'),
+                        toast: document.getElementById('toast'),
+                        presetContainer: document.getElementById('presetContainer'),
+                        controlsContainer: document.getElementById('controlsContainer'),
+                        btnReset: document.getElementById('btn-reset'),
+                        btnSplit: document.getElementById('btn-split'),
+                        btnFile: document.getElementById('btn-file'),
+                        fileInput: document.getElementById('fileInput'),
+                        themeToggle: document.getElementById('themeToggle'),
+                        statusBar: document.getElementById('statusBar')
+                    };
+                }
+
+                static createElement(tag, className, textContent = '') {
+                    const el = document.createElement(tag);
+                    if (className) el.className = className;
+                    if (textContent) el.textContent = textContent;
+                    return el;
+                }
+
+                static createCard(chunk, metaInfo) {
+                    const { content, current, realLen, weightLen, isUnbreakable, urlMode } = metaInfo;
+                    const card = this.createElement('div', `tweet-card${isUnbreakable ? ' warning' : ''}`);
+                    
+                    // Header
+                    const header = this.createElement('div', 'mockup-header');
+                    const avatar = this.createElement('div', 'mockup-avatar', '👤');
+                    const info = this.createElement('div', 'mockup-info');
+                    const name = this.createElement('div', 'mockup-name', '나의 타래');
+                    const handle = this.createElement('div', 'mockup-handle', '@thread_tailor');
+                    info.append(name, handle);
+                    header.append(avatar, info);
+
+                    // Meta
+                    const meta = this.createElement('div', 'card-meta-header');
+                    const badge = this.createElement('span', `badge${isUnbreakable ? ' warn' : ''}`, 
+                        isUnbreakable ? `Part ${current} ⚠️` : `Part ${current}`);
+                    
+                    let lenText = `${realLen}자`;
+                    if (urlMode === 'on' && realLen !== weightLen) {
+                        lenText = `${weightLen}자 (실제 ${realLen})`;
+                    }
+                    const lenSpan = this.createElement('span', '', lenText);
+                    lenSpan.style.fontSize = '0.9rem';
+                    lenSpan.style.color = 'var(--gray-color)';
+                    meta.append(badge, lenSpan);
+
+                    // Body
+                    const body = this.createElement('div', 'card-content', content);
+
+                    // Button
+                    const btn = this.createElement('button', 'copy-btn', CONFIG.MESSAGES.COPY_BTN);
+                    btn.dataset.content = content;
+
+                    card.append(header, meta, body, btn);
+                    return card;
+                }
+            }
+
+            // 3. 클립보드 매니저 (폴백 로직 개선)
+            class ClipboardManager {
+                static async copy(text, triggerBtn) {
+                    if (!text) return;
+                    
+                    let success = false;
+                    try {
+                        if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+                            await navigator.clipboard.writeText(text);
+                            success = true;
+                        } else {
+                            throw new Error("Clipboard API unavailable");
+                        }
+                    } catch (err) {
+                        success = this.fallbackCopy(text);
+                    }
+
+                    if (success) {
+                        this.showSuccess(triggerBtn);
+                    } else {
+                        AppController.showToast(CONFIG.MESSAGES.FAIL);
+                    }
+                }
+
+                static fallbackCopy(text) {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    
+                    // 모바일 화면 튀는 현상 방지
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    textArea.style.top = "0";
+                    textArea.setAttribute("readonly", "");
+                    
+                    document.body.appendChild(textArea);
+                    
+                    if (navigator.userAgent.match(/ipad|iphone/i)) {
+                        const range = document.createRange();
+                        range.selectNodeContents(textArea);
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        textArea.setSelectionRange(0, 999999);
+                    } else {
+                        textArea.select();
+                    }
+
+                    let success = false;
+                    try {
+                        success = document.execCommand('copy');
+                    } catch (err) {
+                        success = false;
+                    }
+                    document.body.removeChild(textArea);
+                    return success;
+                }
+
+                static showSuccess(btn) {
+                    if (!btn) {
+                        AppController.showToast(CONFIG.MESSAGES.CLIPBOARD_SUCCESS);
+                        return;
+                    }
+                    const originalText = btn.textContent;
+                    btn.classList.add('copied');
+                    btn.textContent = CONFIG.MESSAGES.COPIED;
+                    setTimeout(() => {
+                        btn.classList.remove('copied');
+                        // 원래 텍스트 복구 시 아이콘 처리
+                        if (originalText.includes('📋') || originalText === CONFIG.MESSAGES.COPY_BTN) {
+                            btn.textContent = CONFIG.MESSAGES.COPY_BTN;
+                        } else {
+                            btn.textContent = originalText;
+                        }
+                    }, 2000);
+                    AppController.showToast(CONFIG.MESSAGES.CLIPBOARD_SUCCESS);
+                }
+            }
+
+            // 4. 텍스트 처리 엔진 (알고리즘 최적화 & 구조화)
+            class TextEngine {
+                static init() {
+                    this.segmenter = new Intl.Segmenter('ko', { granularity: 'grapheme' });
+                }
+
+                static countGraphemes(text) {
+                    let count = 0;
+                    const iterator = this.segmenter.segment(text)[Symbol.iterator]();
+                    while (!iterator.next().done) count++;
+                    return count;
+                }
+
+                static getLength(text, urlMode) {
+                    if (urlMode === 'on') {
+                        const masked = text.replace(CONFIG.REGEX.URL_GLOBAL, 'x'.repeat(CONFIG.URL_WEIGHT));
+                        return this.countGraphemes(masked);
+                    }
+                    return this.countGraphemes(text);
+                }
+
+                static format(chunk, options, current, total) {
+                    const { position, format, customFormatStr } = options;
+                    let numbering = '';
+                    
+                    if (format === 'custom') {
+                        numbering = (customFormatStr || '{current}/{total}')
+                            .replace('{current}', current)
+                            .replace('{total}', total);
+                    } else {
+                        const map = {
+                            'bracket': `[${current}/${total}]`,
+                            'simple': `${current}/${total}`,
+                            'paren': `(${current}/${total})`,
+                            'thread': `(🧵${current}/${total})`
+                        };
+                        numbering = map[format] || map['thread'];
+                    }
+
+                    const cleanChunk = chunk.replace(/\s+$/, '');
+                    return position === 'front' 
+                        ? `${numbering} ${cleanChunk}` 
+                        : `${cleanChunk} ${numbering}`;
+                }
+
+                // 최적화된 분할 알고리즘 (O(N))
+                static split(text, limit, options) {
+                    const { urlMode, paragraphMode, format, customFormatStr } = options;
+                    
+                    // 예상 총 개수로 더미 번호 길이를 계산
+                    const safeDivisor = Math.max(1, limit - 10);
+                    let estimatedTotal = Math.ceil(this.getLength(text, urlMode) / safeDivisor) || 1;
+                    
+                    let chunks = [];
+                    let loopCount = 0;
+
+                    // 번호 자리수 변화에 따른 재계산 (최대 5회)
+                    while (loopCount < CONFIG.LOOP_LIMIT) {
+                        // 현재 예상치 기준으로 번호 길이 계산
+                        const dummyNum = this.format("", options, estimatedTotal, estimatedTotal).trim();
+                        // 공백 1칸 포함 안전 마진
+                        const overhead = dummyNum.length + 1; 
+                        const safeLimit = limit - overhead;
+
+                        if (safeLimit < 1) return this.runAlgo(text, Math.max(1, limit), urlMode);
+
+                        chunks = paragraphMode === 'on' 
+                            ? this.splitByPara(text, safeLimit, urlMode)
+                            : this.runAlgo(text, safeLimit, urlMode);
+
+                        const actualTotal = chunks.length;
+                        if (String(actualTotal).length <= String(estimatedTotal).length) break;
+                        estimatedTotal = actualTotal;
+                        loopCount++;
+                    }
+                    return chunks;
+                }
+
+                static splitByPara(text, limit, urlMode) {
+                    const paragraphs = text.split('\n');
+                    const chunks = [];
+                    let currentParts = [];
+                    let currentLen = 0;
+
+                    for (const para of paragraphs) {
+                        const paraLen = this.getLength(para, urlMode);
+                        const newlineCost = currentParts.length > 0 ? 1 : 0; // 줄바꿈 비용
+
+                        if (paraLen > limit) {
+                            if (currentParts.length > 0) {
+                                chunks.push({ text: currentParts.join('\n'), isUnbreakable: false });
+                                currentParts = [];
+                                currentLen = 0;
+                            }
+                            // 긴 문단은 강제 분할
+                            chunks.push(...this.runAlgo(para, limit, urlMode));
+                        } else {
+                            if (currentLen + newlineCost + paraLen <= limit) {
+                                currentParts.push(para);
+                                currentLen += newlineCost + paraLen;
+                            } else {
+                                chunks.push({ text: currentParts.join('\n'), isUnbreakable: false });
+                                currentParts = [para];
+                                currentLen = paraLen;
+                            }
+                        }
+                    }
+                    if (currentParts.length > 0) {
+                        chunks.push({ text: currentParts.join('\n'), isUnbreakable: false });
+                    }
+                    return chunks;
+                }
+
+                static runAlgo(text, limit, urlMode) {
+                    const chunks = [];
+                    let start = 0;
+                    const len = text.length;
+                    const startTime = Date.now();
+
+                    // 1. URL 위치 미리 찾기 (오름차순 정렬됨)
+                    const matches = [...text.matchAll(CONFIG.REGEX.URL_GLOBAL)];
+                    let urlIdx = 0;
+
+                    while (start < len) {
+                        // ReDoS 방지: 시간 제한 체크
+                        if (Date.now() - startTime > CONFIG.TIMEOUT_MS) {
+                            chunks.push({ text: text.substring(start), isUnbreakable: true }); 
+                            break;
+                        }
+
+                        let currentWeight = 0;
+                        let splitIdx = start;
+                        let lastSafeSplitIdx = -1;
+                        let isUnbreakable = false;
+                        
+                        // 현재 청크 탐색을 위한 로컬 포인터
+                        const segIter = this.segmenter.segment(text.substring(start))[Symbol.iterator]();
+                        let segResult = segIter.next();
+
+                        while (!segResult.done) {
+                            const seg = segResult.value;
+                            const absStart = start + seg.index;
+                            const segLen = seg.segment.length;
+                            const absEnd = absStart + segLen;
+
+                            // URL 확인 최적화: 포인터 기반
+                            let inUrl = false;
+                            let currentUrlMatch = null;
+
+                            // 현재 위치와 겹치는 URL 찾기 (지나간 URL은 스킵)
+                            while (urlIdx < matches.length && matches[urlIdx].index + matches[urlIdx][0].length <= absStart) {
+                                urlIdx++;
+                            }
+                            
+                            if (urlIdx < matches.length) {
+                                const m = matches[urlIdx];
+                                if (absStart >= m.index && absStart < m.index + m[0].length) {
+                                    inUrl = true;
+                                    currentUrlMatch = m;
+                                }
+                            }
+
+                            // 가중치 계산
+                            if (inUrl) {
+                                // URL의 시작점일 때만 가중치 더함
+                                if (absStart === currentUrlMatch.index) {
+                                    currentWeight += (urlMode === 'on' ? CONFIG.URL_WEIGHT : currentUrlMatch[0].length);
+                                } else if (urlMode === 'off') {
+                                    // URL 모드 off일 땐 글자수 그대로 더해야 하는데 위에서 한 번에 더하는 로직이 아님.
+                                    // 수정: URL 모드 OFF일 때는 일반 글자와 동일 취급하되, 분할 금지 영역으로만 활용
+                                    // 하지만 위 로직 단순화를 위해:
+                                    // URL 내부 문자 하나하나는 가중치 0으로 치고 시작점에서 통으로 더하거나
+                                    // 혹은 그냥 일반 문자처럼 세되 분할 포인트만 잡지 않는다.
+                                    // 여기서는 "URL 내부는 절대 자르지 않는다" 규칙 적용.
+                                }
+                                // URL 모드 OFF면 일반 문자처럼 1씩 증가해야 맞음.
+                                if (urlMode === 'off') currentWeight += segLen; 
+                                else if (urlMode === 'on' && absStart > currentUrlMatch.index) {
+                                    // URL 모드 ON이고 URL 중간이면 가중치 증가 없음 (이미 시작점에서 23 더함)
+                                }
+
+                            } else {
+                                currentWeight += 1;
+                                // 안전한 분할 위치(공백, 문장부호) 기억
+                                if (/\s|[.!?]/.test(seg.segment)) {
+                                    lastSafeSplitIdx = absEnd;
+                                }
+                            }
+
+                            if (currentWeight > limit) {
+                                // 한계 초과 발생
+                                
+                                // 1. URL 내부인 경우: URL 시작점까지 롤백하거나 강제로 자름
+                                if (inUrl && currentUrlMatch.index > start) {
+                                    splitIdx = currentUrlMatch.index;
+                                } 
+                                // 2. 안전한 공백이 있었던 경우
+                                else if (lastSafeSplitIdx > start) {
+                                    splitIdx = lastSafeSplitIdx;
+                                } 
+                                // 3. 방법 없음 (한 단어/URL이 limit보다 큼) -> 강제 분할
+                                else {
+                                    splitIdx = absStart; // 현재 글자 앞에서 자름 (이전까지가 limit 이하였으므로)
+                                    // 단, start == splitIdx라면(첫 글자부터 초과) 최소 1글자는 포함해야 함
+                                    if (splitIdx === start) splitIdx = absEnd;
+                                    isUnbreakable = true;
+                                }
+                                break;
+                            }
+                            
+                            splitIdx = absEnd;
+                            segResult = segIter.next();
+                        }
+
+                        chunks.push({ 
+                            text: text.substring(start, splitIdx), 
+                            isUnbreakable: isUnbreakable 
+                        });
+
+                        start = splitIdx;
+                        
+                        // 다음 청크 시작 전 선행 공백/줄바꿈 스킵 (포맷터가 공백 추가하므로)
+                        while (start < len && /\s/.test(text[start]) && text[start] !== '\n') start++;
+                        if (start < len && text[start] === '\n') start++;
+                    }
+                    return chunks;
+                }
+            }
+
+            // 5. 애플리케이션 컨트롤러
+            class AppController {
+                constructor() {
+                    this.dom = DOMHelper.getElements();
+                    this.settings = {
+                        limit: 300,
+                        urlMode: 'off',
+                        position: 'back',
+                        paragraphMode: 'on',
+                        format: 'thread',
+                        customFormatStr: '',
+                        theme: 'light'
+                    };
+                    this.debounceTimer = null;
+                    this.toastTimer = null;
+                    
+                    TextEngine.init();
+                    this.init();
+                }
+
+                init() {
+                    this.loadSettings();
+                    this.bindEvents();
+                    this.initDragAndDrop();
+                    
+                    // 제목 설정
+                    document.title = "✂️ " + CONFIG.VERSION;
+                    this.dom.appTitle.textContent = "✂️ " + CONFIG.VERSION;
+
+                    if (this.dom.inputText.value) {
+                        this.processText(true);
+                        this.updateCount(this.dom.inputText.value.length);
+                    }
+                }
+
+                loadSettings() {
+                    try {
+                        const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+                        if (saved) {
+                            this.settings = { ...this.settings, ...JSON.parse(saved) };
+                        } else {
+                            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                            this.settings.theme = prefersDark ? 'dark' : 'light';
+                        }
+                        
+                        // Draft 로드
+                        const draft = localStorage.getItem(CONFIG.DRAFT_KEY);
+                        if (draft) this.dom.inputText.value = draft;
+
+                    } catch (e) {
+                        console.warn('Storage access failed', e);
+                    }
+                    this.applySettingsToDOM();
+                }
+
+                saveSettings() {
+                    try {
+                        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(this.settings));
+                    } catch (e) {
+                        AppController.showToast(CONFIG.MESSAGES.STORAGE_ERROR);
+                    }
+                }
+
+                saveDraft(text) {
+                    try {
+                        localStorage.setItem(CONFIG.DRAFT_KEY, text);
+                    } catch (e) { /* Ignore draft errors quietly */ }
+                }
+
+                applySettingsToDOM() {
+                    const s = this.settings;
+                    this.dom.limitInput.value = s.limit;
+                    this.dom.urlModeSelect.value = s.urlMode;
+                    this.dom.positionSelect.value = s.position;
+                    this.dom.paragraphModeSelect.value = s.paragraphMode;
+                    this.dom.numberFormatSelect.value = s.format;
+                    this.dom.customFormatInput.value = s.customFormatStr;
+                    
+                    if (s.format === 'custom') this.dom.customFormatInput.classList.add('show');
+                    else this.dom.customFormatInput.classList.remove('show');
+
+                    this.dom.html.setAttribute('data-theme', s.theme);
+                    this.dom.themeToggle.textContent = s.theme === 'dark' ? '☀️' : '🌙';
+                    
+                    // 프리셋 버튼 활성화 상태 동기화
+                    const presets = { '300': 'bluesky', '280': 'twitter', '500': 'threads' };
+                    const platform = presets[String(s.limit)];
+                    this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                    if (platform) {
+                        const target = document.getElementById(`btn-${platform}`);
+                        if (target) target.classList.add('active');
+                    }
+                }
+
+                syncSettingsFromDOM() {
+                    this.settings.limit = parseInt(this.dom.limitInput.value) || 300;
+                    this.settings.urlMode = this.dom.urlModeSelect.value;
+                    this.settings.position = this.dom.positionSelect.value;
+                    this.settings.paragraphMode = this.dom.paragraphModeSelect.value;
+                    this.settings.format = this.dom.numberFormatSelect.value;
+                    this.settings.customFormatStr = this.dom.customFormatInput.value;
+                    this.saveSettings();
+                }
+
+                bindEvents() {
+                    this.dom.themeToggle.addEventListener('click', () => {
+                        this.settings.theme = this.settings.theme === 'dark' ? 'light' : 'dark';
+                        this.applySettingsToDOM();
+                        this.saveSettings();
+                    });
+
+                    this.dom.presetContainer.addEventListener('click', (e) => {
+                        const btn = e.target.closest('.preset-btn');
+                        if (btn) this.setPreset(btn.dataset.preset);
+                    });
+
+                    [this.dom.limitInput, this.dom.positionSelect, this.dom.paragraphModeSelect, this.dom.urlModeSelect].forEach(el => {
+                        el.addEventListener('change', () => {
+                            if (el === this.dom.limitInput) this.clearPresetActive();
+                            this.syncSettingsFromDOM();
+                            this.debounceProcess();
+                        });
+                    });
+
+                    this.dom.numberFormatSelect.addEventListener('change', () => {
+                        this.syncSettingsFromDOM();
+                        this.debounceProcess();
+                    });
+
+                    this.dom.customFormatInput.addEventListener('input', () => {
+                        this.syncSettingsFromDOM();
+                        this.debounceProcess();
+                    });
+
+                    this.dom.limitInput.addEventListener('input', () => {
+                        this.clearPresetActive();
+                        this.debounceProcess();
+                    });
+
+                    this.dom.inputText.addEventListener('input', (e) => {
+                        this.updateCount(e.target.value.length);
+                        this.saveDraft(e.target.value);
+                        this.debounceProcess();
+                    });
+
+                    this.dom.btnReset.addEventListener('click', () => this.resetAll());
+                    this.dom.btnSplit.addEventListener('click', () => this.processText(false));
+
+                    this.dom.btnFile.addEventListener('click', () => this.dom.fileInput.click());
+                    this.dom.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+
+                    // 결과 영역 이벤트 위임
+                    this.dom.resultsArea.addEventListener('click', (e) => {
+                        const btn = e.target.closest('button');
+                        if (!btn) return;
+                        
+                        if (btn.classList.contains('copy-btn')) {
+                            ClipboardManager.copy(btn.dataset.content, btn);
+                        } else if (btn.classList.contains('copy-all-btn')) {
+                            const allText = this.getAllResultsText();
+                            ClipboardManager.copy(allText, btn);
+                        } else if (btn.classList.contains('download-btn')) {
+                            this.downloadResults();
+                        }
+                    });
+
+                    document.addEventListener('keydown', (e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                            e.preventDefault();
+                            this.dom.btnSplit.click();
+                        }
+                    });
+                }
+
+                initDragAndDrop() {
+                    const zone = this.dom.inputText;
+                    const prevent = e => { e.preventDefault(); e.stopPropagation(); };
+                    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+                        zone.addEventListener(e, prevent);
+                        document.body.addEventListener(e, prevent);
+                    });
+                    
+                    zone.addEventListener('dragenter', () => zone.classList.add('drag-over'));
+                    zone.addEventListener('dragover', () => zone.classList.add('drag-over'));
+                    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                    
+                    zone.addEventListener('drop', (e) => {
+                        zone.classList.remove('drag-over');
+                        const file = e.dataTransfer.files[0];
+                        this.readFile(file);
+                    });
+                }
+
+                handleFileUpload(e) {
+                    const file = e.target.files[0];
+                    this.readFile(file);
+                    e.target.value = '';
+                }
+
+                readFile(file) {
+                    if (file && (file.type === "text/plain" || file.name.endsWith('.txt'))) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            this.dom.inputText.value = ev.target.result;
+                            this.saveDraft(this.dom.inputText.value);
+                            this.updateCount(this.dom.inputText.value.length);
+                            this.debounceProcess();
+                        };
+                        reader.readAsText(file);
+                    } else if (file) {
+                        AppController.showToast(CONFIG.MESSAGES.FILE_ERROR);
+                    }
+                }
+
+                clearPresetActive() {
+                    this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                }
+
+                setPreset(platform) {
+                    this.clearPresetActive();
+                    const btn = document.getElementById(`btn-${platform}`);
+                    if (btn) btn.classList.add('active');
+
+                    if (platform === 'bluesky') {
+                        this.dom.limitInput.value = CONFIG.LIMITS.BLUESKY;
+                        this.dom.urlModeSelect.value = 'off';
+                    } else if (platform === 'twitter') {
+                        this.dom.limitInput.value = CONFIG.LIMITS.TWITTER;
+                        this.dom.urlModeSelect.value = 'on';
+                    } else if (platform === 'threads') {
+                        this.dom.limitInput.value = CONFIG.LIMITS.THREADS;
+                        this.dom.urlModeSelect.value = 'off';
+                    }
+                    this.syncSettingsFromDOM();
+                    this.processText(true);
+                    AppController.showToast(`⚙️ ${this.dom.limitInput.value}${CONFIG.MESSAGES.SETTINGS_DONE}`);
+                }
+
+                updateCount(len) {
+                    this.dom.totalCount.textContent = `현재: ${len.toLocaleString()}자`;
+                }
+
+                debounceProcess() {
+                    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+                    this.debounceTimer = setTimeout(() => {
+                        this.syncSettingsFromDOM();
+                        this.processText(true);
+                    }, CONFIG.DEBOUNCE_MS);
+                }
+
+                resetAll() {
+                    if (confirm(CONFIG.MESSAGES.RESET_CONFIRM)) {
+                        this.dom.inputText.value = "";
+                        this.saveDraft("");
+                        this.updateCount(0);
+                        this.renderResults([]);
+                        this.updateStatusBar(0, 0);
+                        this.dom.inputText.focus();
+                        AppController.showToast(CONFIG.MESSAGES.RESET_DONE);
+                    }
+                }
+
+                processText(isAuto) {
+                    const text = this.dom.inputText.value.trim();
+                    const limit = this.settings.limit;
+
+                    if (!text) {
+                        if (!isAuto) AppController.showToast(CONFIG.MESSAGES.EMPTY_INPUT);
+                        this.renderResults([]);
+                        this.updateStatusBar(0, 0);
+                        return;
+                    }
+                    if (limit < CONFIG.LIMITS.MIN) {
+                        if (!isAuto) AppController.showToast(CONFIG.MESSAGES.LIMIT_ERROR);
+                        return;
+                    }
+
+                    const chunks = TextEngine.split(text, limit, this.settings);
+                    this.renderResults(chunks, isAuto);
+                    this.updateStatusBar(text.length, chunks.length, text);
+                }
+
+                updateStatusBar(chars, chunksCount, text = "") {
+                    const spans = this.dom.statusBar.querySelectorAll('span');
+                    spans[0].textContent = `${chars.toLocaleString()}자`;
+                    const words = text ? text.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+                    spans[1].textContent = `${words.toLocaleString()}개`;
+                    const lines = text ? text.split(/\r\n|\r|\n/).length : 0;
+                    spans[2].textContent = `${lines.toLocaleString()}줄`;
+                    const paras = text ? text.trim().split(/\n\n+/).length : 0;
+                    spans[3].textContent = `${paras.toLocaleString()}개`;
+                    const sec = Math.ceil(chars / 500 * 60);
+                    spans[4].textContent = sec < 60 ? `${sec}초` : `${Math.floor(sec/60)}분 ${sec%60}초`;
+                    spans[5].textContent = `${chunksCount}개`;
+                }
+
+                renderResults(chunks, isAuto) {
+                    const frag = document.createDocumentFragment();
+                    let hasUnbreakable = false;
+
+                    if (chunks.length === 0) {
+                        const div = DOMHelper.createElement('div', 'empty-state');
+                        const p = DOMHelper.createElement('div');
+                        // 안전한 HTML 주입 (단순 텍스트)
+                        p.innerHTML = CONFIG.MESSAGES.EMPTY_STATE; 
+                        div.appendChild(p);
+                        frag.appendChild(div);
+                    } else {
+                        // Action Buttons Wrapper
+                        const actionDiv = DOMHelper.createElement('div', 'results-header-actions');
+                        
+                        const copyAll = DOMHelper.createElement('button', 'copy-all-btn', CONFIG.MESSAGES.COPY_ALL);
+                        const downloadBtn = DOMHelper.createElement('button', 'download-btn', CONFIG.MESSAGES.SAVE_FILE);
+                        
+                        actionDiv.append(copyAll, downloadBtn);
+                        frag.appendChild(actionDiv);
+
+                        chunks.forEach((chunkObj, i) => {
+                            const chunkText = chunkObj.text;
+                            if (chunkObj.isUnbreakable) hasUnbreakable = true;
+                            
+                            const current = i + 1;
+                            const formatted = TextEngine.format(chunkText, this.settings, current, chunks.length);
+
+                            const metaInfo = {
+                                content: formatted,
+                                current: current,
+                                realLen: TextEngine.countGraphemes(formatted),
+                                weightLen: TextEngine.getLength(formatted, this.settings.urlMode),
+                                isUnbreakable: chunkObj.isUnbreakable,
+                                urlMode: this.settings.urlMode
+                            };
+
+                            const card = DOMHelper.createCard(chunkText, metaInfo);
+                            if (!isAuto) card.style.animationDelay = `${i * 0.05}s`;
+                            frag.appendChild(card);
+                        });
+                    }
+
+                    this.dom.resultsArea.replaceChildren(frag);
+
+                    if (hasUnbreakable && !isAuto) {
+                        AppController.showToast(CONFIG.MESSAGES.UNBREAKABLE);
+                    } else if (!isAuto && chunks.length > 0) {
+                        const first = this.dom.resultsArea.querySelector('.copy-btn');
+                        if (first) ClipboardManager.copy(first.dataset.content, first);
+                        AppController.showToast(CONFIG.MESSAGES.SPLIT_DONE);
+                    }
+                }
+
+                getAllResultsText() {
+                    return Array.from(this.dom.resultsArea.querySelectorAll('.copy-btn'))
+                        .map(b => b.dataset.content).join('\n\n');
+                }
+
+                downloadResults() {
+                    const text = this.getAllResultsText();
+                    if (!text) return;
+                    
+                    const blob = new Blob([text], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `thread_tailor_${new Date().toISOString().slice(0,10)}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+
+                static showToast(msg) {
+                    const toast = document.getElementById('toast');
+                    if (toast.timer) clearTimeout(toast.timer);
+                    
+                    toast.classList.remove("show");
+                    void toast.offsetWidth; // Trigger reflow
+                    toast.textContent = msg;
+                    toast.classList.add("show");
+                    
+                    toast.timer = setTimeout(() => toast.classList.remove("show"), 3000);
+                }
+            }
+
+            // 앱 시작
+            new AppController();
+
+        })();
+    </script>
+</body>
+</html>
