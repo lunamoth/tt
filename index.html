@@ -719,7 +719,8 @@
                         <label for="urlMode">🔗 URL 단축</label>
                         <select id="urlMode">
                             <option value="off" selected>사용 안 함</option>
-                            <option value="on">23자로 계산 (t.co)</option>
+                            <option value="twitter">23자로 계산 (t.co)</option>
+                            <option value="bluesky">스마트 단축 (Bluesky)</option>
                         </select>
                     </div>
                 </div>
@@ -727,7 +728,10 @@
                 <textarea id="inputText" maxlength="50000" placeholder="여기에 긴 글을 붙여넣거나 .txt 파일을 드래그하세요... 📝&#10;나머지는 제가 알아서 할게요!"></textarea>
 
                 <div class="action-area">
-                    <div class="char-count" id="totalCount">현재: 0자</div>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <div class="char-count" id="totalCount">현재: 0자</div>
+                        <div id="bskyCount" style="font-size: 1.0rem; color: #0085ff; font-weight: bold; display: none;">🦋 블루스카이: 0자</div>
+                    </div>
                     <div class="buttons-group">
                         <!-- 파일 업로드 버튼 추가 -->
                         <input type="file" id="fileInput" hidden accept=".txt,text/plain">
@@ -776,7 +780,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버/스트링 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 2.0",
+                VERSION: "타래 재단사 3.0",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -786,7 +790,9 @@
                 TIMEOUT_MS: 3000, // ReDoS 방지 타임아웃
                 REGEX: {
                     // ReDoS 방지: 부정 전방 탐색을 포함한 URL 패턴
-                    URL_GLOBAL: /https?:\/\/[^\s]+(?<![.,?!:;])/g
+                    URL_GLOBAL: /https?:\/\/[^\s]+(?<![.,?!:;])/g,
+                    // 블루스카이 공식 문서 기반 Regex (단순화 적용)
+                    BLUESKY_LINK: /(^|\s|\()((https?:\/\/[\S]+)|(([a-z][a-z0-9]*(\.[a-z0-9]+)+)[\S]*))/gim
                 },
                 MESSAGES: {
                     EMPTY_STATE: "왼쪽에 글을 입력하면<br>여기에 결과가 표시됩니다.",
@@ -823,6 +829,7 @@
                         urlModeSelect: document.getElementById('urlMode'),
                         resultsArea: document.getElementById('resultsArea'),
                         totalCount: document.getElementById('totalCount'),
+                        bskyCount: document.getElementById('bskyCount'),
                         toast: document.getElementById('toast'),
                         presetContainer: document.getElementById('presetContainer'),
                         controlsContainer: document.getElementById('controlsContainer'),
@@ -861,7 +868,7 @@
                         isUnbreakable ? `Part ${current} ⚠️` : `Part ${current}`);
                     
                     let lenText = `${realLen}자`;
-                    if (urlMode === 'on' && realLen !== weightLen) {
+                    if (urlMode !== 'off' && realLen !== weightLen) {
                         lenText = `${weightLen}자 (실제 ${realLen})`;
                     }
                     const lenSpan = this.createElement('span', '', lenText);
@@ -972,11 +979,40 @@
                     return count;
                 }
 
+                // 블루스카이 방식 글자 수 계산 (프로토콜 제거 및 긴 URL 말줄임 처리)
+                static countBlueskyGraphemes(text) {
+                    let processed = text;
+                    
+                    // getLength 용도이므로, 전체 문자열에서 URL 부분만 교체한 뒤 길이 측정
+                    processed = text.replace(CONFIG.REGEX.BLUESKY_LINK, (match, p1, p2) => {
+                        let uri = p2;
+                        let cleanUri = uri;
+                        if (cleanUri.startsWith('http')) {
+                            // https:// 제거
+                            cleanUri = cleanUri.replace(/^https?:\/\//i, ''); 
+                        }
+                        // 수정된 로직: 긴 URL 말줄임(...) 처리 시뮬레이션
+                        // 블루스카이는 아주 긴 URL을 내부적으로 짧게 계산함
+                        // 28자 대신 27자로 조정하여 오차 보정
+                        if (cleanUri.length > 27) {
+                            return p1 + "x".repeat(27); 
+                        }
+                        return p1 + cleanUri; 
+                    });
+
+                    return this.countGraphemes(processed);
+                }
+
                 static getLength(text, urlMode) {
-                    if (urlMode === 'on') {
+                    if (urlMode === 'twitter') {
+                        // 트위터 모드: 모든 URL을 23자로 치환
                         const masked = text.replace(CONFIG.REGEX.URL_GLOBAL, 'x'.repeat(CONFIG.URL_WEIGHT));
                         return this.countGraphemes(masked);
+                    } else if (urlMode === 'bluesky') {
+                        // 블루스카이 모드: 스마트 단축 로직
+                        return this.countBlueskyGraphemes(text);
                     }
+                    // 일반 모드 (스레드 등)
                     return this.countGraphemes(text);
                 }
 
@@ -1044,6 +1080,7 @@
                     let currentLen = 0;
 
                     for (const para of paragraphs) {
+                        // 문단 길이 계산 시에도 해당 모드 적용
                         const paraLen = this.getLength(para, urlMode);
                         const newlineCost = currentParts.length > 0 ? 1 : 0; // 줄바꿈 비용
 
@@ -1078,8 +1115,8 @@
                     const len = text.length;
                     const startTime = Date.now();
 
-                    // 1. URL 위치 미리 찾기 (오름차순 정렬됨)
-                    const matches = [...text.matchAll(CONFIG.REGEX.URL_GLOBAL)];
+                    const regexToUse = urlMode === 'bluesky' ? CONFIG.REGEX.BLUESKY_LINK : CONFIG.REGEX.URL_GLOBAL;
+                    const matches = [...text.matchAll(regexToUse)];
                     let urlIdx = 0;
 
                     while (start < len) {
@@ -1108,7 +1145,7 @@
                             let inUrl = false;
                             let currentUrlMatch = null;
 
-                            // 현재 위치와 겹치는 URL 찾기 (지나간 URL은 스킵)
+                            // 현재 위치와 겹치는 URL 찾기
                             while (urlIdx < matches.length && matches[urlIdx].index + matches[urlIdx][0].length <= absStart) {
                                 urlIdx++;
                             }
@@ -1125,21 +1162,40 @@
                             if (inUrl) {
                                 // URL의 시작점일 때만 가중치 더함
                                 if (absStart === currentUrlMatch.index) {
-                                    currentWeight += (urlMode === 'on' ? CONFIG.URL_WEIGHT : currentUrlMatch[0].length);
-                                } else if (urlMode === 'off') {
-                                    // URL 모드 off일 땐 글자수 그대로 더해야 하는데 위에서 한 번에 더하는 로직이 아님.
-                                    // 수정: URL 모드 OFF일 때는 일반 글자와 동일 취급하되, 분할 금지 영역으로만 활용
-                                    // 하지만 위 로직 단순화를 위해:
-                                    // URL 내부 문자 하나하나는 가중치 0으로 치고 시작점에서 통으로 더하거나
-                                    // 혹은 그냥 일반 문자처럼 세되 분할 포인트만 잡지 않는다.
-                                    // 여기서는 "URL 내부는 절대 자르지 않는다" 규칙 적용.
-                                }
-                                // URL 모드 OFF면 일반 문자처럼 1씩 증가해야 맞음.
-                                if (urlMode === 'off') currentWeight += segLen; 
-                                else if (urlMode === 'on' && absStart > currentUrlMatch.index) {
-                                    // URL 모드 ON이고 URL 중간이면 가중치 증가 없음 (이미 시작점에서 23 더함)
-                                }
+                                    if (urlMode === 'twitter') {
+                                        currentWeight += CONFIG.URL_WEIGHT;
+                                    } else if (urlMode === 'bluesky') {
+                                        // 블루스카이: 실제 URL 텍스트에서 https:// 제거한 길이 계산
+                                        let rawUrl = currentUrlMatch[0];
+                                        // 그룹2가 실제 URL 부분
+                                        let displayUrl = rawUrl;
+                                        if (displayUrl.startsWith('http')) {
+                                            displayUrl = displayUrl.replace(/^https?:\/\//i, '');
+                                        }
+                                        if (urlMode === 'bluesky' && currentUrlMatch[2]) {
+                                             let realUri = currentUrlMatch[2];
+                                             if (realUri.startsWith('http')) {
+                                                 realUri = realUri.replace(/^https?:\/\//i, '');
+                                             }
+                                             // 긴 URL 말줄임 로직 적용 (27자로 제한)
+                                             let uriLen = this.countGraphemes(realUri);
+                                             if (uriLen > 27) uriLen = 27;
 
+                                             // prefix 부분(match[1])의 길이도 더해줘야 함
+                                             let prefixLen = currentUrlMatch[1] ? currentUrlMatch[1].length : 0;
+                                             currentWeight += prefixLen + uriLen;
+                                        } else {
+                                            // Fallback
+                                            let fallbackLen = this.countGraphemes(rawUrl);
+                                            // Fallback에서도 말줄임 시뮬레이션
+                                            if (fallbackLen > 35) fallbackLen = 35; // prefix 포함 대략
+                                            currentWeight += fallbackLen;
+                                        }
+                                    } else {
+                                        // OFF 모드: 글자 수 그대로 (분할은 금지)
+                                        currentWeight += this.countGraphemes(currentUrlMatch[0]);
+                                    }
+                                }
                             } else {
                                 currentWeight += 1;
                                 // 안전한 분할 위치(공백, 문장부호) 기억
@@ -1150,19 +1206,12 @@
 
                             if (currentWeight > limit) {
                                 // 한계 초과 발생
-                                
-                                // 1. URL 내부인 경우: URL 시작점까지 롤백하거나 강제로 자름
                                 if (inUrl && currentUrlMatch.index > start) {
                                     splitIdx = currentUrlMatch.index;
-                                } 
-                                // 2. 안전한 공백이 있었던 경우
-                                else if (lastSafeSplitIdx > start) {
+                                } else if (lastSafeSplitIdx > start) {
                                     splitIdx = lastSafeSplitIdx;
-                                } 
-                                // 3. 방법 없음 (한 단어/URL이 limit보다 큼) -> 강제 분할
-                                else {
-                                    splitIdx = absStart; // 현재 글자 앞에서 자름 (이전까지가 limit 이하였으므로)
-                                    // 단, start == splitIdx라면(첫 글자부터 초과) 최소 1글자는 포함해야 함
+                                } else {
+                                    splitIdx = absStart; 
                                     if (splitIdx === start) splitIdx = absEnd;
                                     isUnbreakable = true;
                                 }
@@ -1180,7 +1229,7 @@
 
                         start = splitIdx;
                         
-                        // 다음 청크 시작 전 선행 공백/줄바꿈 스킵 (포맷터가 공백 추가하므로)
+                        // 다음 청크 시작 전 선행 공백/줄바꿈 스킵
                         while (start < len && /\s/.test(text[start]) && text[start] !== '\n') start++;
                         if (start < len && text[start] === '\n') start++;
                     }
@@ -1219,7 +1268,7 @@
 
                     if (this.dom.inputText.value) {
                         this.processText(true);
-                        this.updateCount(this.dom.inputText.value.length);
+                        this.updateCount(this.dom.inputText.value);
                     }
                 }
 
@@ -1272,12 +1321,15 @@
                     this.dom.html.setAttribute('data-theme', s.theme);
                     this.dom.themeToggle.textContent = s.theme === 'dark' ? '☀️' : '🌙';
                     
-                    // 프리셋 버튼 활성화 상태 동기화
                     const presets = { '300': 'bluesky', '280': 'twitter', '500': 'threads' };
-                    const platform = presets[String(s.limit)];
+                    let activePreset = '';
+                    if (String(s.limit) === '280' && s.urlMode === 'twitter') activePreset = 'twitter';
+                    else if (String(s.limit) === '300' && s.urlMode === 'bluesky') activePreset = 'bluesky';
+                    else if (String(s.limit) === '500') activePreset = 'threads';
+
                     this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-                    if (platform) {
-                        const target = document.getElementById(`btn-${platform}`);
+                    if (activePreset) {
+                        const target = document.getElementById(`btn-${activePreset}`);
                         if (target) target.classList.add('active');
                     }
                 }
@@ -1328,7 +1380,7 @@
                     });
 
                     this.dom.inputText.addEventListener('input', (e) => {
-                        this.updateCount(e.target.value.length);
+                        this.updateCount(e.target.value);
                         this.saveDraft(e.target.value);
                         this.debounceProcess();
                     });
@@ -1393,7 +1445,7 @@
                         reader.onload = (ev) => {
                             this.dom.inputText.value = ev.target.result;
                             this.saveDraft(this.dom.inputText.value);
-                            this.updateCount(this.dom.inputText.value.length);
+                            this.updateCount(this.dom.inputText.value);
                             this.debounceProcess();
                         };
                         reader.readAsText(file);
@@ -1413,10 +1465,10 @@
 
                     if (platform === 'bluesky') {
                         this.dom.limitInput.value = CONFIG.LIMITS.BLUESKY;
-                        this.dom.urlModeSelect.value = 'on';
+                        this.dom.urlModeSelect.value = 'bluesky'; // 스마트 단축
                     } else if (platform === 'twitter') {
                         this.dom.limitInput.value = CONFIG.LIMITS.TWITTER;
-                        this.dom.urlModeSelect.value = 'on';
+                        this.dom.urlModeSelect.value = 'twitter'; // 23자 고정
                     } else if (platform === 'threads') {
                         this.dom.limitInput.value = CONFIG.LIMITS.THREADS;
                         this.dom.urlModeSelect.value = 'off';
@@ -1426,8 +1478,16 @@
                     AppController.showToast(`⚙️ ${this.dom.limitInput.value}${CONFIG.MESSAGES.SETTINGS_DONE}`);
                 }
 
-                updateCount(len) {
+                updateCount(text) {
+                    const len = text.length; 
                     this.dom.totalCount.textContent = `현재: ${len.toLocaleString()}자`;
+
+                    // 블루스카이 계산
+                    const bskyLen = TextEngine.countBlueskyGraphemes(text);
+                    this.dom.bskyCount.textContent = `🦋 블루스카이: ${bskyLen.toLocaleString()}자`;
+                    
+                    if (len > 0) this.dom.bskyCount.style.display = 'block';
+                    else this.dom.bskyCount.style.display = 'none';
                 }
 
                 debounceProcess() {
@@ -1442,7 +1502,7 @@
                     if (confirm(CONFIG.MESSAGES.RESET_CONFIRM)) {
                         this.dom.inputText.value = "";
                         this.saveDraft("");
-                        this.updateCount(0);
+                        this.updateCount("");
                         this.renderResults([]);
                         this.updateStatusBar(0, 0);
                         this.dom.inputText.focus();
