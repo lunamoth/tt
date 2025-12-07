@@ -1499,7 +1499,6 @@
                 }
 
                 resetAll() {
-                    if (confirm(CONFIG.MESSAGES.RESET_CONFIRM)) {
                         this.dom.inputText.value = "";
                         this.saveDraft("");
                         this.updateCount("");
@@ -1507,7 +1506,6 @@
                         this.updateStatusBar(0, 0);
                         this.dom.inputText.focus();
                         AppController.showToast(CONFIG.MESSAGES.RESET_DONE);
-                    }
                 }
 
                 processText(isAuto) {
