@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 4. 보안 강화: CSP 메타 태그 (엄격한 적용) -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;">
-    <title>✂️ 타래 재단사</title>
+    <title>✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기</title>
     <style>
         :root {
             --primary-color: #6366f1;
@@ -730,6 +729,7 @@
                 <div class="action-area">
                     <div style="display: flex; flex-direction: column; gap: 2px;">
                         <div class="char-count" id="totalCount">현재: 0자</div>
+                        <div id="twitterCount" style="font-size: 1.0rem; color: #1d9bf0; font-weight: bold; display: none;">🐦 트위터: 0자</div>
                         <div id="bskyCount" style="font-size: 1.0rem; color: #0085ff; font-weight: bold; display: none;">🦋 블루스카이: 0자</div>
                     </div>
                     <div class="buttons-group">
@@ -780,7 +780,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버/스트링 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 3.0",
+                VERSION: "타래 재단사 3.1 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -830,6 +830,7 @@
                         resultsArea: document.getElementById('resultsArea'),
                         totalCount: document.getElementById('totalCount'),
                         bskyCount: document.getElementById('bskyCount'),
+                        twitterCount: document.getElementById('twitterCount'), // 트위터 카운트 추가
                         toast: document.getElementById('toast'),
                         presetContainer: document.getElementById('presetContainer'),
                         controlsContainer: document.getElementById('controlsContainer'),
@@ -1003,11 +1004,38 @@
                     return this.countGraphemes(processed);
                 }
 
+                // 트위터(X) 개발자 문서 기준 가중치 계산 (1: Latin/Punctuation, 2: CJK/Emoji/Etc)
+                static isTwitterWeightOne(code) {
+                    return (code >= 0 && code <= 4351) ||     // U+0000 - U+10FF
+                           (code >= 8192 && code <= 8205) ||  // U+2000 - U+200D
+                           (code >= 8208 && code <= 8223) ||  // U+2010 - U+201F
+                           (code >= 8242 && code <= 8247);    // U+2032 - U+2037
+                }
+
                 static getLength(text, urlMode) {
                     if (urlMode === 'twitter') {
-                        // 트위터 모드: 모든 URL을 23자로 치환
-                        const masked = text.replace(CONFIG.REGEX.URL_GLOBAL, 'x'.repeat(CONFIG.URL_WEIGHT));
-                        return this.countGraphemes(masked);
+                        // 트위터 모드: NFC 정규화 후 URL을 23자로 치환하고 가중치 계산
+                        const normalized = text.normalize('NFC');
+                        const masked = normalized.replace(CONFIG.REGEX.URL_GLOBAL, 'x'.repeat(CONFIG.URL_WEIGHT));
+                        
+                        let totalWeight = 0;
+                        const iterator = this.segmenter.segment(masked)[Symbol.iterator]();
+                        let result = iterator.next();
+                        
+                        while (!result.done) {
+                            const segmentStr = result.value.segment;
+                            const code = segmentStr.codePointAt(0);
+                            
+                            // 기본은 2 (CJK, Emojis 등), 범위 내에 있으면 1
+                            if (this.isTwitterWeightOne(code)) {
+                                totalWeight += 1;
+                            } else {
+                                totalWeight += 2;
+                            }
+                            result = iterator.next();
+                        }
+                        return totalWeight;
+
                     } else if (urlMode === 'bluesky') {
                         // 블루스카이 모드: 스마트 단축 로직
                         return this.countBlueskyGraphemes(text);
@@ -1056,7 +1084,7 @@
                         // 현재 예상치 기준으로 번호 길이 계산
                         const dummyNum = this.format("", options, estimatedTotal, estimatedTotal).trim();
                         // 공백 1칸 포함 안전 마진
-                        const overhead = dummyNum.length + 1; 
+                        const overhead = this.getLength(dummyNum, urlMode) + 1;
                         const safeLimit = limit - overhead;
 
                         if (safeLimit < 1) return this.runAlgo(text, Math.max(1, limit), urlMode);
@@ -1112,17 +1140,20 @@
                 static runAlgo(text, limit, urlMode) {
                     const chunks = [];
                     let start = 0;
-                    const len = text.length;
+                    
+                    // Twitter 모드일 경우 NFC 정규화된 텍스트 사용
+                    const processedText = urlMode === 'twitter' ? text.normalize('NFC') : text;
+                    const len = processedText.length;
                     const startTime = Date.now();
 
                     const regexToUse = urlMode === 'bluesky' ? CONFIG.REGEX.BLUESKY_LINK : CONFIG.REGEX.URL_GLOBAL;
-                    const matches = [...text.matchAll(regexToUse)];
+                    const matches = [...processedText.matchAll(regexToUse)];
                     let urlIdx = 0;
 
                     while (start < len) {
                         // ReDoS 방지: 시간 제한 체크
                         if (Date.now() - startTime > CONFIG.TIMEOUT_MS) {
-                            chunks.push({ text: text.substring(start), isUnbreakable: true }); 
+                            chunks.push({ text: processedText.substring(start), isUnbreakable: true }); 
                             break;
                         }
 
@@ -1132,7 +1163,7 @@
                         let isUnbreakable = false;
                         
                         // 현재 청크 탐색을 위한 로컬 포인터
-                        const segIter = this.segmenter.segment(text.substring(start))[Symbol.iterator]();
+                        const segIter = this.segmenter.segment(processedText.substring(start))[Symbol.iterator]();
                         let segResult = segIter.next();
 
                         while (!segResult.done) {
@@ -1165,9 +1196,8 @@
                                     if (urlMode === 'twitter') {
                                         currentWeight += CONFIG.URL_WEIGHT;
                                     } else if (urlMode === 'bluesky') {
-                                        // 블루스카이: 실제 URL 텍스트에서 https:// 제거한 길이 계산
+                                        // 블루스카이 로직 (기존 유지)
                                         let rawUrl = currentUrlMatch[0];
-                                        // 그룹2가 실제 URL 부분
                                         let displayUrl = rawUrl;
                                         if (displayUrl.startsWith('http')) {
                                             displayUrl = displayUrl.replace(/^https?:\/\//i, '');
@@ -1177,27 +1207,35 @@
                                              if (realUri.startsWith('http')) {
                                                  realUri = realUri.replace(/^https?:\/\//i, '');
                                              }
-                                             // 긴 URL 말줄임 로직 적용 (27자로 제한)
                                              let uriLen = this.countGraphemes(realUri);
                                              if (uriLen > 27) uriLen = 27;
 
-                                             // prefix 부분(match[1])의 길이도 더해줘야 함
                                              let prefixLen = currentUrlMatch[1] ? currentUrlMatch[1].length : 0;
                                              currentWeight += prefixLen + uriLen;
                                         } else {
-                                            // Fallback
                                             let fallbackLen = this.countGraphemes(rawUrl);
-                                            // Fallback에서도 말줄임 시뮬레이션
-                                            if (fallbackLen > 35) fallbackLen = 35; // prefix 포함 대략
+                                            if (fallbackLen > 35) fallbackLen = 35; 
                                             currentWeight += fallbackLen;
                                         }
                                     } else {
-                                        // OFF 모드: 글자 수 그대로 (분할은 금지)
                                         currentWeight += this.countGraphemes(currentUrlMatch[0]);
                                     }
                                 }
                             } else {
-                                currentWeight += 1;
+                                // URL이 아닌 일반 텍스트 가중치 계산
+                                let charWeight = 1;
+                                if (urlMode === 'twitter') {
+                                    const code = seg.segment.codePointAt(0);
+                                    // 트위터 모드: 범위 내 1, 그 외(CJK, Emoji 등) 2
+                                    if (this.isTwitterWeightOne(code)) {
+                                        charWeight = 1;
+                                    } else {
+                                        charWeight = 2;
+                                    }
+                                }
+                                // 그 외 모드는 segment당 1로 계산 (기존 방식)
+                                currentWeight += charWeight;
+
                                 // 안전한 분할 위치(공백, 문장부호) 기억
                                 if (/\s|[.!?]/.test(seg.segment)) {
                                     lastSafeSplitIdx = absEnd;
@@ -1223,15 +1261,15 @@
                         }
 
                         chunks.push({ 
-                            text: text.substring(start, splitIdx), 
+                            text: processedText.substring(start, splitIdx), 
                             isUnbreakable: isUnbreakable 
                         });
 
                         start = splitIdx;
                         
                         // 다음 청크 시작 전 선행 공백/줄바꿈 스킵
-                        while (start < len && /\s/.test(text[start]) && text[start] !== '\n') start++;
-                        if (start < len && text[start] === '\n') start++;
+                        while (start < len && /\s/.test(processedText[start]) && processedText[start] !== '\n') start++;
+                        if (start < len && processedText[start] === '\n') start++;
                     }
                     return chunks;
                 }
@@ -1482,12 +1520,21 @@
                     const len = text.length; 
                     this.dom.totalCount.textContent = `현재: ${len.toLocaleString()}자`;
 
+                    // 트위터 계산 (기존 getLength 로직 재사용)
+                    const twitterLen = TextEngine.getLength(text, 'twitter');
+                    this.dom.twitterCount.textContent = `🐦 트위터: ${twitterLen.toLocaleString()}자`;
+
                     // 블루스카이 계산
                     const bskyLen = TextEngine.countBlueskyGraphemes(text);
                     this.dom.bskyCount.textContent = `🦋 블루스카이: ${bskyLen.toLocaleString()}자`;
                     
-                    if (len > 0) this.dom.bskyCount.style.display = 'block';
-                    else this.dom.bskyCount.style.display = 'none';
+                    if (len > 0) {
+                        this.dom.bskyCount.style.display = 'block';
+                        this.dom.twitterCount.style.display = 'block';
+                    } else {
+                        this.dom.bskyCount.style.display = 'none';
+                        this.dom.twitterCount.style.display = 'none';
+                    }
                 }
 
                 debounceProcess() {
