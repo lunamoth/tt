@@ -1,7 +1,7 @@
 # ✂️ 타래 재단사 (Thread Tailor)
 <br>
 <p align="center">
-**https://lunamoth.github.io/tt/**
+<b>https://lunamoth.github.io/tt/</b>
 </p>
 <br>
 > **"긴 글을 🔒서버 전송 없이 안전하게 타래로 재단해드려요."**  
