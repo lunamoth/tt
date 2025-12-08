@@ -828,7 +828,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버/스트링 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 3.5 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 3.7 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1028,12 +1028,15 @@
                     return count;
                 }
 
-                // 블루스카이 방식 글자 수 계산 (프로토콜 제거 + 긴 URL 단축 시뮬레이션)
+                // 블루스카이 방식 글자 수 계산 (프로토콜 제거 + 긴 URL 도메인별 단축 시뮬레이션)
                 static countBlueskyGraphemes(text) {
                     let processed = text.replace(CONFIG.REGEX.BLUESKY_LINK, (match, p1, p2) => {
                         let cleanUrl = p2.replace(/^https?:\/\//i, '');
                         if (cleanUrl.length > 50) {
-                            return p1 + "x".repeat(31);
+                            // 도메인 추출 후 (도메인 길이 + 16)으로 계산
+                            const domain = cleanUrl.split('/')[0];
+                            const domainLen = this.countGraphemes(domain);
+                            return p1 + "x".repeat(domainLen + 16);
                         }
                         return p1 + cleanUrl;
                     });
@@ -1232,11 +1235,13 @@
                                     if (urlMode === 'twitter') {
                                         currentWeight += CONFIG.URL_WEIGHT;
                                     } else if (urlMode === 'bluesky') {
-                                        // 수정됨: 블루스카이 모드에서 긴 URL은 31자로, 그 외는 실제 길이(프로토콜 제외)
+                                        // 수정됨: 블루스카이 모드에서 긴 URL은 (도메인 길이 + 16), 그 외는 실제 길이(프로토콜 제외)
                                         let cleanUrl = currentUrlMatch[0].replace(/^https?:\/\//i, '');
                                         let len = this.countGraphemes(cleanUrl);
                                         if (len > 50) {
-                                            currentWeight += 31;
+                                            let domain = cleanUrl.split('/')[0];
+                                            let domainLen = this.countGraphemes(domain);
+                                            currentWeight += (domainLen + 16);
                                         } else {
                                             currentWeight += len; // 실제 길이
                                         }
@@ -1311,6 +1316,7 @@
                         customFormatStr: '',
                         theme: 'light'
                     };
+                    this.currentPreset = ''; // 현재 선택된 프리셋 저장
                     this.debounceTimer = null;
                     this.toastTimer = null;
                     
@@ -1387,6 +1393,8 @@
                     if (String(s.limit) === '280' && s.urlMode === 'twitter') activePreset = 'twitter';
                     else if (String(s.limit) === '300' && s.urlMode === 'bluesky') activePreset = 'bluesky';
                     else if (String(s.limit) === '500') activePreset = 'threads';
+
+                    this.currentPreset = activePreset; // 현재 프리셋 업데이트
 
                     this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
                     if (activePreset) {
@@ -1516,7 +1524,9 @@
                 }
 
                 clearPresetActive() {
+                    this.currentPreset = ''; // 프리셋 비활성화
                     this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                    this.updateCount(this.dom.inputText.value); // 카운트 표시 갱신
                 }
 
                 setPreset(platform) {
@@ -1534,8 +1544,10 @@
                         this.dom.limitInput.value = CONFIG.LIMITS.THREADS;
                         this.dom.urlModeSelect.value = 'off';
                     }
+                    this.currentPreset = platform; // 현재 프리셋 설정
                     this.syncSettingsFromDOM();
                     this.processText(true);
+                    this.updateCount(this.dom.inputText.value); // 카운트 갱신
                     AppController.showToast(`⚙️ ${this.dom.limitInput.value}${CONFIG.MESSAGES.SETTINGS_DONE}`);
                 }
 
@@ -1543,20 +1555,24 @@
                     const len = text.length; 
                     this.dom.totalCount.textContent = `현재: ${len.toLocaleString()}자`;
 
-                    // 트위터 계산 (기존 getLength 로직 재사용)
-                    const twitterLen = TextEngine.getLength(text, 'twitter');
-                    this.dom.twitterCount.textContent = `🐦 트위터: ${twitterLen.toLocaleString()}자`;
+                    // 기본적으로 숨김
+                    this.dom.bskyCount.style.display = 'none';
+                    this.dom.twitterCount.style.display = 'none';
 
-                    // 블루스카이 계산
-                    const bskyLen = TextEngine.countBlueskyGraphemes(text);
-                    this.dom.bskyCount.textContent = `🦋 블루스카이: ${bskyLen.toLocaleString()}자`;
-                    
-                    if (len > 0) {
-                        this.dom.bskyCount.style.display = 'block';
+                    // 내용이 없으면 계산 중단
+                    if (len === 0) return;
+
+                    // 현재 활성화된 프리셋에 따라서만 표시 및 체크/엑스 표시
+                    if (this.currentPreset === 'twitter') {
+                        const twitterLen = TextEngine.getLength(text, 'twitter');
+                        const status = twitterLen <= CONFIG.LIMITS.TWITTER ? '✅' : '❌';
+                        this.dom.twitterCount.textContent = `🐦 트위터: ${twitterLen.toLocaleString()}자 ${status}`;
                         this.dom.twitterCount.style.display = 'block';
-                    } else {
-                        this.dom.bskyCount.style.display = 'none';
-                        this.dom.twitterCount.style.display = 'none';
+                    } else if (this.currentPreset === 'bluesky') {
+                        const bskyLen = TextEngine.countBlueskyGraphemes(text);
+                        const status = bskyLen <= CONFIG.LIMITS.BLUESKY ? '✅' : '❌';
+                        this.dom.bskyCount.textContent = `🦋 블루스카이: ${bskyLen.toLocaleString()}자 ${status}`;
+                        this.dom.bskyCount.style.display = 'block';
                     }
                 }
 
