@@ -1,3 +1,5 @@
+--- START OF FILE index.html ---
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -828,7 +830,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버/스트링 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 3.7 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 3.9 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1032,13 +1034,18 @@
                 static countBlueskyGraphemes(text) {
                     let processed = text.replace(CONFIG.REGEX.BLUESKY_LINK, (match, p1, p2) => {
                         let cleanUrl = p2.replace(/^https?:\/\//i, '');
-                        if (cleanUrl.length > 50) {
-                            // 도메인 추출 후 (도메인 길이 + 16)으로 계산
-                            const domain = cleanUrl.split('/')[0];
-                            const domainLen = this.countGraphemes(domain);
-                            return p1 + "x".repeat(domainLen + 16);
-                        }
-                        return p1 + cleanUrl;
+                        let fullLen = this.countGraphemes(cleanUrl);
+                        
+                        // 도메인 추출 후 (도메인 길이 + 16)으로 계산
+                        const domain = cleanUrl.split('/')[0];
+                        const domainLen = this.countGraphemes(domain);
+                        const shortenedLen = domainLen + 16;
+
+                        // 원래 길이와 단축 공식 중 더 짧은 쪽을 선택 (Min Logic)
+                        // 하한선(36자) 제한 없음
+                        const finalLen = (fullLen < shortenedLen) ? fullLen : shortenedLen;
+                        
+                        return p1 + "x".repeat(finalLen);
                     });
                     return this.countGraphemes(processed);
                 }
@@ -1235,16 +1242,16 @@
                                     if (urlMode === 'twitter') {
                                         currentWeight += CONFIG.URL_WEIGHT;
                                     } else if (urlMode === 'bluesky') {
-                                        // 수정됨: 블루스카이 모드에서 긴 URL은 (도메인 길이 + 16), 그 외는 실제 길이(프로토콜 제외)
+                                        // 수정됨: 블루스카이 모드에서 긴 URL은 Min(실제길이, 도메인 길이 + 16)으로 계산
                                         let cleanUrl = currentUrlMatch[0].replace(/^https?:\/\//i, '');
-                                        let len = this.countGraphemes(cleanUrl);
-                                        if (len > 50) {
-                                            let domain = cleanUrl.split('/')[0];
-                                            let domainLen = this.countGraphemes(domain);
-                                            currentWeight += (domainLen + 16);
-                                        } else {
-                                            currentWeight += len; // 실제 길이
-                                        }
+                                        let fullLen = this.countGraphemes(cleanUrl);
+                                        
+                                        let domain = cleanUrl.split('/')[0];
+                                        let domainLen = this.countGraphemes(domain);
+                                        let shortenedLen = domainLen + 16;
+
+                                        // 원래 길이와 단축 공식 중 더 짧은 쪽을 선택 (Min Logic)
+                                        currentWeight += (fullLen < shortenedLen) ? fullLen : shortenedLen;
                                     } else {
                                         currentWeight += this.countGraphemes(currentUrlMatch[0]);
                                     }
