@@ -828,7 +828,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버/스트링 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 3.3 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 3.4 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1028,27 +1028,11 @@
                     return count;
                 }
 
-                // 블루스카이 방식 글자 수 계산 (프로토콜 제거 및 긴 URL 말줄임 처리)
+                // 블루스카이 방식 글자 수 계산 (프로토콜 제거)
                 static countBlueskyGraphemes(text) {
-                    let processed = text;
-                    
-                    // getLength 용도이므로, 전체 문자열에서 URL 부분만 교체한 뒤 길이 측정
-                    processed = text.replace(CONFIG.REGEX.BLUESKY_LINK, (match, p1, p2) => {
-                        let uri = p2;
-                        let cleanUri = uri;
-                        if (cleanUri.startsWith('http')) {
-                            // https:// 제거
-                            cleanUri = cleanUri.replace(/^https?:\/\//i, ''); 
-                        }
-                        // 수정된 로직: 긴 URL 말줄임(...) 처리 시뮬레이션
-                        // 블루스카이는 아주 긴 URL을 내부적으로 짧게 계산함
-                        // 28자 대신 27자로 조정하여 오차 보정
-                        if (cleanUri.length > 27) {
-                            return p1 + "x".repeat(27); 
-                        }
-                        return p1 + cleanUri; 
-                    });
-
+                    // 수정됨: 블루스카이는 http/https 프로토콜 부분을 글자 수에서 제외함
+                    // 정확히 8자(https://) 또는 7자(http://) 차이 발생 해결
+                    const processed = text.replace(/https?:\/\//gi, '');
                     return this.countGraphemes(processed);
                 }
 
@@ -1085,7 +1069,7 @@
                         return totalWeight;
 
                     } else if (urlMode === 'bluesky') {
-                        // 블루스카이 모드: 스마트 단축 로직
+                        // 블루스카이 모드: 스마트 단축 로직 (프로토콜 제외 계산)
                         return this.countBlueskyGraphemes(text);
                     }
                     // 일반 모드 (스레드 등)
@@ -1244,27 +1228,9 @@
                                     if (urlMode === 'twitter') {
                                         currentWeight += CONFIG.URL_WEIGHT;
                                     } else if (urlMode === 'bluesky') {
-                                        // 블루스카이 로직 (기존 유지)
-                                        let rawUrl = currentUrlMatch[0];
-                                        let displayUrl = rawUrl;
-                                        if (displayUrl.startsWith('http')) {
-                                            displayUrl = displayUrl.replace(/^https?:\/\//i, '');
-                                        }
-                                        if (urlMode === 'bluesky' && currentUrlMatch[2]) {
-                                             let realUri = currentUrlMatch[2];
-                                             if (realUri.startsWith('http')) {
-                                                 realUri = realUri.replace(/^https?:\/\//i, '');
-                                             }
-                                             let uriLen = this.countGraphemes(realUri);
-                                             if (uriLen > 27) uriLen = 27;
-
-                                             let prefixLen = currentUrlMatch[1] ? currentUrlMatch[1].length : 0;
-                                             currentWeight += prefixLen + uriLen;
-                                        } else {
-                                            let fallbackLen = this.countGraphemes(rawUrl);
-                                            if (fallbackLen > 35) fallbackLen = 35; 
-                                            currentWeight += fallbackLen;
-                                        }
+                                        // 수정됨: 블루스카이 모드인 경우 프로토콜(http://, https://) 제외하고 계산
+                                        let cleanUrl = currentUrlMatch[0].replace(/^https?:\/\//i, '');
+                                        currentWeight += this.countGraphemes(cleanUrl);
                                     } else {
                                         currentWeight += this.countGraphemes(currentUrlMatch[0]);
                                     }
