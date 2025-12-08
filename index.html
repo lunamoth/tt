@@ -828,7 +828,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버/스트링 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 3.4 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 3.5 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1028,11 +1028,15 @@
                     return count;
                 }
 
-                // 블루스카이 방식 글자 수 계산 (프로토콜 제거)
+                // 블루스카이 방식 글자 수 계산 (프로토콜 제거 + 긴 URL 단축 시뮬레이션)
                 static countBlueskyGraphemes(text) {
-                    // 수정됨: 블루스카이는 http/https 프로토콜 부분을 글자 수에서 제외함
-                    // 정확히 8자(https://) 또는 7자(http://) 차이 발생 해결
-                    const processed = text.replace(/https?:\/\//gi, '');
+                    let processed = text.replace(CONFIG.REGEX.BLUESKY_LINK, (match, p1, p2) => {
+                        let cleanUrl = p2.replace(/^https?:\/\//i, '');
+                        if (cleanUrl.length > 50) {
+                            return p1 + "x".repeat(31);
+                        }
+                        return p1 + cleanUrl;
+                    });
                     return this.countGraphemes(processed);
                 }
 
@@ -1069,7 +1073,7 @@
                         return totalWeight;
 
                     } else if (urlMode === 'bluesky') {
-                        // 블루스카이 모드: 스마트 단축 로직 (프로토콜 제외 계산)
+                        // 블루스카이 모드: 스마트 단축 로직 (프로토콜 제외 + 긴 URL 단축)
                         return this.countBlueskyGraphemes(text);
                     }
                     // 일반 모드 (스레드 등)
@@ -1228,9 +1232,14 @@
                                     if (urlMode === 'twitter') {
                                         currentWeight += CONFIG.URL_WEIGHT;
                                     } else if (urlMode === 'bluesky') {
-                                        // 수정됨: 블루스카이 모드인 경우 프로토콜(http://, https://) 제외하고 계산
+                                        // 수정됨: 블루스카이 모드에서 긴 URL은 34자로, 그 외는 실제 길이(프로토콜 제외)
                                         let cleanUrl = currentUrlMatch[0].replace(/^https?:\/\//i, '');
-                                        currentWeight += this.countGraphemes(cleanUrl);
+                                        let len = this.countGraphemes(cleanUrl);
+                                        if (len > 50) {
+                                            currentWeight += 31;
+                                        } else {
+                                            currentWeight += len; // 실제 길이
+                                        }
                                     } else {
                                         currentWeight += this.countGraphemes(currentUrlMatch[0]);
                                     }
