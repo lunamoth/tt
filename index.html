@@ -102,8 +102,13 @@
         }
 
         p.subtitle {
-            font-size: 1.05rem;
-            color: var(--gray-color);
+            font-size: 1.1rem; /* 가독성: 크기 증가 */
+            color: var(--text-color); /* 가독성: 진한 색상으로 변경 */
+            opacity: 0.9;
+            margin-top: 5px;
+            font-weight: 500; /* 가독성: 굵기 조정 */
+            word-break: keep-all; /* 가독성: 한글 줄바꿈 유지 */
+            line-height: 1.5;
         }
 
         .layout-wrapper {
@@ -561,7 +566,7 @@
             gap: 6px;
         }
 
-        /* 추가된 개인정보 안내 문구 스타일 */
+        /* 추가된 개인정보 안내 문구 스타일 (태그는 삭제했지만 스타일은 유지하여 코드 변경 최소화) */
         .privacy-notice {
             text-align: center;
             margin-top: 20px;
@@ -655,7 +660,7 @@
     <div class="container">
         <header>
             <h1 id="appTitle">✂️ 타래 재단사</h1>
-            <p class="subtitle">왼쪽에 긴 글을 넣으면 오른쪽에 타래가 나타납니다 ✨</p>
+            <p class="subtitle">긴 글을 🔒서버 전송 없이 안전하게 타래로 재단해드려요. (제작: @lunamoth & Gemini 3.0)</p>
             <button class="theme-toggle-btn" id="themeToggle" aria-label="다크 모드 전환">
                 🌙
             </button>
@@ -762,14 +767,8 @@
             <div class="status-item">🧵 생성된 타래: <span>0개</span></div>
         </div>
 
-        <!-- 개인정보 안내 문구 추가 -->
-        <div class="privacy-notice">
-            🔒 입력하신 글과 설정값은 브라우저 내부에만 안전하게 저장되며, 외부 서버로 전송되지 않습니다.
-        </div>
+        <!-- 개인정보 안내 문구 및 footer 삭제됨 -->
 
-        <footer>
-            타래 재단사는 lunamoth 와 제미나이 3.0 프로가 함께 만들었습니다. 🧵 옷감(기능)에 문제가 있거나 새로운 스타일(아이디어)을 원하시면 @lunamoth (블루스카이/트위터/스레드) 에게 살짝 귀띔해 주세요!
-        </footer>
     </div>
 
     <div id="toast">✅ 복사 완료!</div>
@@ -780,7 +779,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버/스트링 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 3.1 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 3.2 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
