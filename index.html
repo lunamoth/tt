@@ -1232,7 +1232,7 @@
                                     if (urlMode === 'twitter') {
                                         currentWeight += CONFIG.URL_WEIGHT;
                                     } else if (urlMode === 'bluesky') {
-                                        // 수정됨: 블루스카이 모드에서 긴 URL은 34자로, 그 외는 실제 길이(프로토콜 제외)
+                                        // 수정됨: 블루스카이 모드에서 긴 URL은 31자로, 그 외는 실제 길이(프로토콜 제외)
                                         let cleanUrl = currentUrlMatch[0].replace(/^https?:\/\//i, '');
                                         let len = this.countGraphemes(cleanUrl);
                                         if (len > 50) {
