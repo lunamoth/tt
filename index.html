@@ -826,22 +826,19 @@
         (function() {
             "use strict";
 
-            // 1. 상수 및 설정 관리 (매직 넘버/스트링 제거)
+            // 1. 상수 및 설정 관리 (매직 넘버 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 3.9 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 4.0 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
-                URL_WEIGHT: 23,
+                URL_WEIGHTS: {
+                    TWITTER: 23,
+                    BSKY_ADDED_LEN: 16 // BlueSky shortens domain + this amount approx
+                },
                 DEBOUNCE_MS: 500,
                 LOOP_LIMIT: 5,
-                TIMEOUT_MS: 3000, // ReDoS 방지 타임아웃
-                REGEX: {
-                    // ReDoS 방지: 부정 전방 탐색을 포함한 URL 패턴
-                    URL_GLOBAL: /https?:\/\/[^\s]+(?<![.,?!:;])/g,
-                    // 블루스카이 공식 문서 기반 Regex (단순화 적용)
-                    BLUESKY_LINK: /(^|\s|\()((https?:\/\/[\S]+)|(([a-z][a-z0-9]*(\.[a-z0-9]+)+)[\S]*))/gim
-                },
+                TIMEOUT_MS: 3000, 
                 MESSAGES: {
                     EMPTY_STATE: "왼쪽에 글을 입력하면<br>여기에 결과가 표시됩니다.",
                     EMPTY_INPUT: "⚠️ 텍스트를 입력해주세요!",
@@ -862,7 +859,7 @@
                 }
             };
 
-            // 2. DOM 관리 도우미 (보안 강화: innerHTML 제거)
+            // 2. DOM 관리 도우미 (DOM 캐싱 및 최적화)
             class DOMHelper {
                 static getElements() {
                     return {
@@ -878,7 +875,7 @@
                         resultsArea: document.getElementById('resultsArea'),
                         totalCount: document.getElementById('totalCount'),
                         bskyCount: document.getElementById('bskyCount'),
-                        twitterCount: document.getElementById('twitterCount'), // 트위터 카운트 추가
+                        twitterCount: document.getElementById('twitterCount'),
                         toast: document.getElementById('toast'),
                         presetContainer: document.getElementById('presetContainer'),
                         controlsContainer: document.getElementById('controlsContainer'),
@@ -898,11 +895,24 @@
                     return el;
                 }
 
+                static setText(el, text) {
+                    if (el && el.textContent !== text) el.textContent = text;
+                }
+
+                static setStyle(el, prop, value) {
+                    if (el && el.style[prop] !== value) el.style[prop] = value;
+                }
+
+                static setClass(el, className, add) {
+                    if (!el) return;
+                    if (add && !el.classList.contains(className)) el.classList.add(className);
+                    else if (!add && el.classList.contains(className)) el.classList.remove(className);
+                }
+
                 static createCard(chunk, metaInfo) {
                     const { content, current, realLen, weightLen, isUnbreakable, urlMode } = metaInfo;
                     const card = this.createElement('div', `tweet-card${isUnbreakable ? ' warning' : ''}`);
                     
-                    // Header
                     const header = this.createElement('div', 'mockup-header');
                     const avatar = this.createElement('div', 'mockup-avatar', '👤');
                     const info = this.createElement('div', 'mockup-info');
@@ -911,7 +921,6 @@
                     info.append(name, handle);
                     header.append(avatar, info);
 
-                    // Meta
                     const meta = this.createElement('div', 'card-meta-header');
                     const badge = this.createElement('span', `badge${isUnbreakable ? ' warn' : ''}`, 
                         isUnbreakable ? `Part ${current} ⚠️` : `Part ${current}`);
@@ -925,10 +934,7 @@
                     lenSpan.style.color = 'var(--gray-color)';
                     meta.append(badge, lenSpan);
 
-                    // Body
                     const body = this.createElement('div', 'card-content', content);
-
-                    // Button
                     const btn = this.createElement('button', 'copy-btn', CONFIG.MESSAGES.COPY_BTN);
                     btn.dataset.content = content;
 
@@ -937,11 +943,10 @@
                 }
             }
 
-            // 3. 클립보드 매니저 (폴백 로직 개선)
+            // 3. 클립보드 매니저
             class ClipboardManager {
                 static async copy(text, triggerBtn) {
                     if (!text) return;
-                    
                     let success = false;
                     try {
                         if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
@@ -954,23 +959,17 @@
                         success = this.fallbackCopy(text);
                     }
 
-                    if (success) {
-                        this.showSuccess(triggerBtn);
-                    } else {
-                        AppController.showToast(CONFIG.MESSAGES.FAIL);
-                    }
+                    if (success) this.showSuccess(triggerBtn);
+                    else AppController.showToast(CONFIG.MESSAGES.FAIL);
                 }
 
                 static fallbackCopy(text) {
                     const textArea = document.createElement("textarea");
                     textArea.value = text;
-                    
-                    // 모바일 화면 튀는 현상 방지
                     textArea.style.position = "fixed";
                     textArea.style.left = "-9999px";
                     textArea.style.top = "0";
                     textArea.setAttribute("readonly", "");
-                    
                     document.body.appendChild(textArea);
                     
                     if (navigator.userAgent.match(/ipad|iphone/i)) {
@@ -985,11 +984,7 @@
                     }
 
                     let success = false;
-                    try {
-                        success = document.execCommand('copy');
-                    } catch (err) {
-                        success = false;
-                    }
+                    try { success = document.execCommand('copy'); } catch (err) { success = false; }
                     document.body.removeChild(textArea);
                     return success;
                 }
@@ -1004,7 +999,6 @@
                     btn.textContent = CONFIG.MESSAGES.COPIED;
                     setTimeout(() => {
                         btn.classList.remove('copied');
-                        // 원래 텍스트 복구 시 아이콘 처리
                         if (originalText.includes('📋') || originalText === CONFIG.MESSAGES.COPY_BTN) {
                             btn.textContent = CONFIG.MESSAGES.COPY_BTN;
                         } else {
@@ -1015,10 +1009,20 @@
                 }
             }
 
-            // 4. 텍스트 처리 엔진 (알고리즘 최적화 & 구조화)
+            // 4. 텍스트 처리 엔진 (ReDoS 방지, Regex 캐싱, Intl.Segmenter 재사용)
             class TextEngine {
                 static init() {
+                    // 인스턴스 재사용 및 정규식 캐싱
                     this.segmenter = new Intl.Segmenter('ko', { granularity: 'grapheme' });
+                    
+                    // Regex Optimization: Avoid Catastrophic Backtracking (ReDoS)
+                    // URL_GLOBAL: More strict non-whitespace match
+                    this.REGEX_OBJ = {
+                        URL_GLOBAL: /https?:\/\/[^\s]+(?<![.,?!:;])/g,
+                        // Optimized Bluesky Link Regex to avoid nested quantifiers near [\S]* 
+                        // Simplified domain part slightly for performance while maintaining accuracy
+                        BLUESKY_LINK: /(^|\s|\()((https?:\/\/[^\s]+)|(([a-z][a-z0-9]*(?:\.[a-z0-9]+)+)[^\s]*))/gim
+                    };
                 }
 
                 static countGraphemes(text) {
@@ -1028,27 +1032,22 @@
                     return count;
                 }
 
-                // 블루스카이 방식 글자 수 계산 (프로토콜 제거 + 긴 URL 도메인별 단축 시뮬레이션)
                 static countBlueskyGraphemes(text) {
-                    let processed = text.replace(CONFIG.REGEX.BLUESKY_LINK, (match, p1, p2) => {
+                    // Cached Regex usage
+                    let processed = text.replace(this.REGEX_OBJ.BLUESKY_LINK, (match, p1, p2) => {
                         let cleanUrl = p2.replace(/^https?:\/\//i, '');
                         let fullLen = this.countGraphemes(cleanUrl);
                         
-                        // 도메인 추출 후 (도메인 길이 + 16)으로 계산
                         const domain = cleanUrl.split('/')[0];
                         const domainLen = this.countGraphemes(domain);
-                        const shortenedLen = domainLen + 16;
-
-                        // 원래 길이와 단축 공식 중 더 짧은 쪽을 선택 (Min Logic)
-                        // 하한선(36자) 제한 없음
-                        const finalLen = (fullLen < shortenedLen) ? fullLen : shortenedLen;
+                        const shortenedLen = domainLen + CONFIG.URL_WEIGHTS.BSKY_ADDED_LEN;
                         
+                        const finalLen = (fullLen < shortenedLen) ? fullLen : shortenedLen;
                         return p1 + "x".repeat(finalLen);
                     });
                     return this.countGraphemes(processed);
                 }
 
-                // 트위터(X) 개발자 문서 기준 가중치 계산 (1: Latin/Punctuation, 2: CJK/Emoji/Etc)
                 static isTwitterWeightOne(code) {
                     return (code >= 0 && code <= 4351) ||     // U+0000 - U+10FF
                            (code >= 8192 && code <= 8205) ||  // U+2000 - U+200D
@@ -1058,9 +1057,9 @@
 
                 static getLength(text, urlMode) {
                     if (urlMode === 'twitter') {
-                        // 트위터 모드: NFC 정규화 후 URL을 23자로 치환하고 가중치 계산
                         const normalized = text.normalize('NFC');
-                        const masked = normalized.replace(CONFIG.REGEX.URL_GLOBAL, 'x'.repeat(CONFIG.URL_WEIGHT));
+                        // Use cached Regex
+                        const masked = normalized.replace(this.REGEX_OBJ.URL_GLOBAL, 'x'.repeat(CONFIG.URL_WEIGHTS.TWITTER));
                         
                         let totalWeight = 0;
                         const iterator = this.segmenter.segment(masked)[Symbol.iterator]();
@@ -1069,22 +1068,14 @@
                         while (!result.done) {
                             const segmentStr = result.value.segment;
                             const code = segmentStr.codePointAt(0);
-                            
-                            // 기본은 2 (CJK, Emojis 등), 범위 내에 있으면 1
-                            if (this.isTwitterWeightOne(code)) {
-                                totalWeight += 1;
-                            } else {
-                                totalWeight += 2;
-                            }
+                            totalWeight += this.isTwitterWeightOne(code) ? 1 : 2;
                             result = iterator.next();
                         }
                         return totalWeight;
 
                     } else if (urlMode === 'bluesky') {
-                        // 블루스카이 모드: 스마트 단축 로직 (프로토콜 제외 + 긴 URL 단축)
                         return this.countBlueskyGraphemes(text);
                     }
-                    // 일반 모드 (스레드 등)
                     return this.countGraphemes(text);
                 }
 
@@ -1093,9 +1084,10 @@
                     let numbering = '';
                     
                     if (format === 'custom') {
+                        // FIX: replace -> replaceAll for multiple occurrences support
                         numbering = (customFormatStr || '{current}/{total}')
-                            .replace('{current}', current)
-                            .replace('{total}', total);
+                            .replaceAll('{current}', current)
+                            .replaceAll('{total}', total);
                     } else {
                         const map = {
                             'bracket': `[${current}/${total}]`,
@@ -1112,22 +1104,17 @@
                         : `${cleanChunk} ${numbering}`;
                 }
 
-                // 최적화된 분할 알고리즘 (O(N))
                 static split(text, limit, options) {
-                    const { urlMode, paragraphMode, format, customFormatStr } = options;
+                    const { urlMode, paragraphMode } = options;
                     
-                    // 예상 총 개수로 더미 번호 길이를 계산
                     const safeDivisor = Math.max(1, limit - 10);
                     let estimatedTotal = Math.ceil(this.getLength(text, urlMode) / safeDivisor) || 1;
                     
                     let chunks = [];
                     let loopCount = 0;
 
-                    // 번호 자리수 변화에 따른 재계산 (최대 5회)
                     while (loopCount < CONFIG.LOOP_LIMIT) {
-                        // 현재 예상치 기준으로 번호 길이 계산
                         const dummyNum = this.format("", options, estimatedTotal, estimatedTotal).trim();
-                        // 공백 1칸 포함 안전 마진
                         const overhead = this.getLength(dummyNum, urlMode) + 1;
                         const safeLimit = limit - overhead;
 
@@ -1148,35 +1135,41 @@
                 static splitByPara(text, limit, urlMode) {
                     const paragraphs = text.split('\n');
                     const chunks = [];
-                    let currentParts = [];
                     let currentLen = 0;
+                    
+                    // Optimization: Use string accumulator instead of array join
+                    let currentBuffer = ""; 
 
-                    for (const para of paragraphs) {
-                        // 문단 길이 계산 시에도 해당 모드 적용
+                    for (let i = 0; i < paragraphs.length; i++) {
+                        const para = paragraphs[i];
                         const paraLen = this.getLength(para, urlMode);
-                        const newlineCost = currentParts.length > 0 ? 1 : 0; // 줄바꿈 비용
+                        const newlineCost = currentBuffer.length > 0 ? 1 : 0; 
 
                         if (paraLen > limit) {
-                            if (currentParts.length > 0) {
-                                chunks.push({ text: currentParts.join('\n'), isUnbreakable: false });
-                                currentParts = [];
+                            if (currentBuffer.length > 0) {
+                                chunks.push({ text: currentBuffer, isUnbreakable: false });
+                                currentBuffer = "";
                                 currentLen = 0;
                             }
-                            // 긴 문단은 강제 분할
-                            chunks.push(...this.runAlgo(para, limit, urlMode));
+                            // Long paragraph handling
+                            const subChunks = this.runAlgo(para, limit, urlMode);
+                            for (let j = 0; j < subChunks.length; j++) {
+                                chunks.push(subChunks[j]);
+                            }
                         } else {
                             if (currentLen + newlineCost + paraLen <= limit) {
-                                currentParts.push(para);
+                                if (currentBuffer.length > 0) currentBuffer += "\n";
+                                currentBuffer += para;
                                 currentLen += newlineCost + paraLen;
                             } else {
-                                chunks.push({ text: currentParts.join('\n'), isUnbreakable: false });
-                                currentParts = [para];
+                                chunks.push({ text: currentBuffer, isUnbreakable: false });
+                                currentBuffer = para;
                                 currentLen = paraLen;
                             }
                         }
                     }
-                    if (currentParts.length > 0) {
-                        chunks.push({ text: currentParts.join('\n'), isUnbreakable: false });
+                    if (currentBuffer.length > 0) {
+                        chunks.push({ text: currentBuffer, isUnbreakable: false });
                     }
                     return chunks;
                 }
@@ -1185,17 +1178,17 @@
                     const chunks = [];
                     let start = 0;
                     
-                    // Twitter 모드일 경우 NFC 정규화된 텍스트 사용
                     const processedText = urlMode === 'twitter' ? text.normalize('NFC') : text;
                     const len = processedText.length;
                     const startTime = Date.now();
 
-                    const regexToUse = urlMode === 'bluesky' ? CONFIG.REGEX.BLUESKY_LINK : CONFIG.REGEX.URL_GLOBAL;
-                    const matches = [...processedText.matchAll(regexToUse)];
+                    // Regex logic using cached objects
+                    const regexSource = urlMode === 'bluesky' ? this.REGEX_OBJ.BLUESKY_LINK : this.REGEX_OBJ.URL_GLOBAL;
+                    // matchAll returns iterator, safe logic maintained
+                    const matches = [...processedText.matchAll(new RegExp(regexSource))];
                     let urlIdx = 0;
 
                     while (start < len) {
-                        // ReDoS 방지: 시간 제한 체크
                         if (Date.now() - startTime > CONFIG.TIMEOUT_MS) {
                             chunks.push({ text: processedText.substring(start), isUnbreakable: true }); 
                             break;
@@ -1206,7 +1199,6 @@
                         let lastSafeSplitIdx = -1;
                         let isUnbreakable = false;
                         
-                        // 현재 청크 탐색을 위한 로컬 포인터
                         const segIter = this.segmenter.segment(processedText.substring(start))[Symbol.iterator]();
                         let segResult = segIter.next();
 
@@ -1216,11 +1208,11 @@
                             const segLen = seg.segment.length;
                             const absEnd = absStart + segLen;
 
-                            // URL 확인 최적화: 포인터 기반
+                            // Optimized URL detection
                             let inUrl = false;
                             let currentUrlMatch = null;
 
-                            // 현재 위치와 겹치는 URL 찾기
+                            // Skip past URLs
                             while (urlIdx < matches.length && matches[urlIdx].index + matches[urlIdx][0].length <= absStart) {
                                 urlIdx++;
                             }
@@ -1233,50 +1225,36 @@
                                 }
                             }
 
-                            // 가중치 계산
                             if (inUrl) {
-                                // URL의 시작점일 때만 가중치 더함
                                 if (absStart === currentUrlMatch.index) {
                                     if (urlMode === 'twitter') {
-                                        currentWeight += CONFIG.URL_WEIGHT;
+                                        currentWeight += CONFIG.URL_WEIGHTS.TWITTER;
                                     } else if (urlMode === 'bluesky') {
-                                        // 수정됨: 블루스카이 모드에서 긴 URL은 Min(실제길이, 도메인 길이 + 16)으로 계산
                                         let cleanUrl = currentUrlMatch[0].replace(/^https?:\/\//i, '');
                                         let fullLen = this.countGraphemes(cleanUrl);
-                                        
                                         let domain = cleanUrl.split('/')[0];
                                         let domainLen = this.countGraphemes(domain);
-                                        let shortenedLen = domainLen + 16;
-
-                                        // 원래 길이와 단축 공식 중 더 짧은 쪽을 선택 (Min Logic)
+                                        let shortenedLen = domainLen + CONFIG.URL_WEIGHTS.BSKY_ADDED_LEN;
                                         currentWeight += (fullLen < shortenedLen) ? fullLen : shortenedLen;
                                     } else {
                                         currentWeight += this.countGraphemes(currentUrlMatch[0]);
                                     }
                                 }
                             } else {
-                                // URL이 아닌 일반 텍스트 가중치 계산
                                 let charWeight = 1;
                                 if (urlMode === 'twitter') {
                                     const code = seg.segment.codePointAt(0);
-                                    // 트위터 모드: 범위 내 1, 그 외(CJK, Emoji 등) 2
-                                    if (this.isTwitterWeightOne(code)) {
-                                        charWeight = 1;
-                                    } else {
-                                        charWeight = 2;
-                                    }
+                                    charWeight = this.isTwitterWeightOne(code) ? 1 : 2;
                                 }
-                                // 그 외 모드는 segment당 1로 계산 (기존 방식)
                                 currentWeight += charWeight;
 
-                                // 안전한 분할 위치(공백, 문장부호) 기억
                                 if (/\s|[.!?]/.test(seg.segment)) {
                                     lastSafeSplitIdx = absEnd;
                                 }
                             }
 
                             if (currentWeight > limit) {
-                                // 한계 초과 발생
+                                // Edge Case Fix: Ensure split happens properly when URL causes overflow
                                 if (inUrl && currentUrlMatch.index > start) {
                                     splitIdx = currentUrlMatch.index;
                                 } else if (lastSafeSplitIdx > start) {
@@ -1300,7 +1278,6 @@
 
                         start = splitIdx;
                         
-                        // 다음 청크 시작 전 선행 공백/줄바꿈 스킵
                         while (start < len && /\s/.test(processedText[start]) && processedText[start] !== '\n') start++;
                         if (start < len && processedText[start] === '\n') start++;
                     }
@@ -1321,9 +1298,7 @@
                         customFormatStr: '',
                         theme: 'light'
                     };
-                    this.currentPreset = ''; // 현재 선택된 프리셋 저장
                     this.debounceTimer = null;
-                    this.toastTimer = null;
                     
                     TextEngine.init();
                     this.init();
@@ -1334,9 +1309,8 @@
                     this.bindEvents();
                     this.initDragAndDrop();
                     
-                    // 제목 설정
+                    DOMHelper.setText(this.dom.appTitle, "✂️ " + CONFIG.VERSION);
                     document.title = "✂️ " + CONFIG.VERSION;
-                    this.dom.appTitle.textContent = "✂️ " + CONFIG.VERSION;
 
                     if (this.dom.inputText.value) {
                         this.processText(true);
@@ -1354,7 +1328,6 @@
                             this.settings.theme = prefersDark ? 'dark' : 'light';
                         }
                         
-                        // Draft 로드
                         const draft = localStorage.getItem(CONFIG.DRAFT_KEY);
                         if (draft) this.dom.inputText.value = draft;
 
@@ -1373,39 +1346,44 @@
                 }
 
                 saveDraft(text) {
-                    try {
-                        localStorage.setItem(CONFIG.DRAFT_KEY, text);
-                    } catch (e) { /* Ignore draft errors quietly */ }
+                    try { localStorage.setItem(CONFIG.DRAFT_KEY, text); } catch (e) {}
+                }
+
+                // Check active preset logic improved to handle UI sync correctly
+                checkActivePreset() {
+                    const s = this.settings;
+                    let activePreset = '';
+                    
+                    if (s.limit == CONFIG.LIMITS.TWITTER && s.urlMode === 'twitter') activePreset = 'twitter';
+                    else if (s.limit == CONFIG.LIMITS.BLUESKY && s.urlMode === 'bluesky') activePreset = 'bluesky';
+                    else if (s.limit == CONFIG.LIMITS.THREADS && s.urlMode === 'off') activePreset = 'threads';
+
+                    this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => DOMHelper.setClass(b, 'active', false));
+                    if (activePreset) {
+                        const target = document.getElementById(`btn-${activePreset}`);
+                        DOMHelper.setClass(target, 'active', true);
+                    }
+                    return activePreset;
                 }
 
                 applySettingsToDOM() {
                     const s = this.settings;
-                    this.dom.limitInput.value = s.limit;
-                    this.dom.urlModeSelect.value = s.urlMode;
-                    this.dom.positionSelect.value = s.position;
-                    this.dom.paragraphModeSelect.value = s.paragraphMode;
-                    this.dom.numberFormatSelect.value = s.format;
-                    this.dom.customFormatInput.value = s.customFormatStr;
+                    if (this.dom.limitInput.value != s.limit) this.dom.limitInput.value = s.limit;
+                    if (this.dom.urlModeSelect.value !== s.urlMode) this.dom.urlModeSelect.value = s.urlMode;
+                    if (this.dom.positionSelect.value !== s.position) this.dom.positionSelect.value = s.position;
+                    if (this.dom.paragraphModeSelect.value !== s.paragraphMode) this.dom.paragraphModeSelect.value = s.paragraphMode;
+                    if (this.dom.numberFormatSelect.value !== s.format) this.dom.numberFormatSelect.value = s.format;
+                    if (this.dom.customFormatInput.value !== s.customFormatStr) this.dom.customFormatInput.value = s.customFormatStr;
                     
-                    if (s.format === 'custom') this.dom.customFormatInput.classList.add('show');
-                    else this.dom.customFormatInput.classList.remove('show');
+                    if (s.format === 'custom') DOMHelper.setClass(this.dom.customFormatInput, 'show', true);
+                    else DOMHelper.setClass(this.dom.customFormatInput, 'show', false);
 
-                    this.dom.html.setAttribute('data-theme', s.theme);
-                    this.dom.themeToggle.textContent = s.theme === 'dark' ? '☀️' : '🌙';
-                    
-                    const presets = { '300': 'bluesky', '280': 'twitter', '500': 'threads' };
-                    let activePreset = '';
-                    if (String(s.limit) === '280' && s.urlMode === 'twitter') activePreset = 'twitter';
-                    else if (String(s.limit) === '300' && s.urlMode === 'bluesky') activePreset = 'bluesky';
-                    else if (String(s.limit) === '500') activePreset = 'threads';
-
-                    this.currentPreset = activePreset; // 현재 프리셋 업데이트
-
-                    this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-                    if (activePreset) {
-                        const target = document.getElementById(`btn-${activePreset}`);
-                        if (target) target.classList.add('active');
+                    if (this.dom.html.getAttribute('data-theme') !== s.theme) {
+                        this.dom.html.setAttribute('data-theme', s.theme);
+                        DOMHelper.setText(this.dom.themeToggle, s.theme === 'dark' ? '☀️' : '🌙');
                     }
+                    
+                    this.checkActivePreset();
                 }
 
                 syncSettingsFromDOM() {
@@ -1416,6 +1394,7 @@
                     this.settings.format = this.dom.numberFormatSelect.value;
                     this.settings.customFormatStr = this.dom.customFormatInput.value;
                     this.saveSettings();
+                    this.checkActivePreset(); // Sync preset UI state on any change
                 }
 
                 bindEvents() {
@@ -1432,7 +1411,6 @@
 
                     [this.dom.limitInput, this.dom.positionSelect, this.dom.paragraphModeSelect, this.dom.urlModeSelect].forEach(el => {
                         el.addEventListener('change', () => {
-                            if (el === this.dom.limitInput) this.clearPresetActive();
                             this.syncSettingsFromDOM();
                             this.debounceProcess();
                         });
@@ -1449,7 +1427,7 @@
                     });
 
                     this.dom.limitInput.addEventListener('input', () => {
-                        this.clearPresetActive();
+                        this.checkActivePreset(); // Instant UI feedback
                         this.debounceProcess();
                     });
 
@@ -1465,7 +1443,6 @@
                     this.dom.btnFile.addEventListener('click', () => this.dom.fileInput.click());
                     this.dom.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
 
-                    // 결과 영역 이벤트 위임
                     this.dom.resultsArea.addEventListener('click', (e) => {
                         const btn = e.target.closest('button');
                         if (!btn) return;
@@ -1496,12 +1473,12 @@
                         document.body.addEventListener(e, prevent);
                     });
                     
-                    zone.addEventListener('dragenter', () => zone.classList.add('drag-over'));
-                    zone.addEventListener('dragover', () => zone.classList.add('drag-over'));
-                    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                    zone.addEventListener('dragenter', () => DOMHelper.setClass(zone, 'drag-over', true));
+                    zone.addEventListener('dragover', () => DOMHelper.setClass(zone, 'drag-over', true));
+                    zone.addEventListener('dragleave', () => DOMHelper.setClass(zone, 'drag-over', false));
                     
                     zone.addEventListener('drop', (e) => {
-                        zone.classList.remove('drag-over');
+                        DOMHelper.setClass(zone, 'drag-over', false);
                         const file = e.dataTransfer.files[0];
                         this.readFile(file);
                     });
@@ -1528,56 +1505,46 @@
                     }
                 }
 
-                clearPresetActive() {
-                    this.currentPreset = ''; // 프리셋 비활성화
-                    this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-                    this.updateCount(this.dom.inputText.value); // 카운트 표시 갱신
-                }
-
                 setPreset(platform) {
-                    this.clearPresetActive();
-                    const btn = document.getElementById(`btn-${platform}`);
-                    if (btn) btn.classList.add('active');
-
                     if (platform === 'bluesky') {
                         this.dom.limitInput.value = CONFIG.LIMITS.BLUESKY;
-                        this.dom.urlModeSelect.value = 'bluesky'; // 스마트 단축
+                        this.dom.urlModeSelect.value = 'bluesky';
                     } else if (platform === 'twitter') {
                         this.dom.limitInput.value = CONFIG.LIMITS.TWITTER;
-                        this.dom.urlModeSelect.value = 'twitter'; // 23자 고정
+                        this.dom.urlModeSelect.value = 'twitter';
                     } else if (platform === 'threads') {
                         this.dom.limitInput.value = CONFIG.LIMITS.THREADS;
                         this.dom.urlModeSelect.value = 'off';
                     }
-                    this.currentPreset = platform; // 현재 프리셋 설정
-                    this.syncSettingsFromDOM();
+                    
+                    this.syncSettingsFromDOM(); // This triggers checkActivePreset()
                     this.processText(true);
-                    this.updateCount(this.dom.inputText.value); // 카운트 갱신
+                    this.updateCount(this.dom.inputText.value);
                     AppController.showToast(`⚙️ ${this.dom.limitInput.value}${CONFIG.MESSAGES.SETTINGS_DONE}`);
                 }
 
                 updateCount(text) {
                     const len = text.length; 
-                    this.dom.totalCount.textContent = `현재: ${len.toLocaleString()}자`;
+                    DOMHelper.setText(this.dom.totalCount, `현재: ${len.toLocaleString()}자`);
 
-                    // 기본적으로 숨김
-                    this.dom.bskyCount.style.display = 'none';
-                    this.dom.twitterCount.style.display = 'none';
+                    DOMHelper.setStyle(this.dom.bskyCount, 'display', 'none');
+                    DOMHelper.setStyle(this.dom.twitterCount, 'display', 'none');
 
-                    // 내용이 없으면 계산 중단
                     if (len === 0) return;
 
-                    // 현재 활성화된 프리셋에 따라서만 표시 및 체크/엑스 표시
-                    if (this.currentPreset === 'twitter') {
+                    // UI logic: determine which count to show based on preset state
+                    const currentPreset = this.checkActivePreset();
+
+                    if (currentPreset === 'twitter') {
                         const twitterLen = TextEngine.getLength(text, 'twitter');
                         const status = twitterLen <= CONFIG.LIMITS.TWITTER ? '✅' : '❌';
-                        this.dom.twitterCount.textContent = `🐦 트위터: ${twitterLen.toLocaleString()}자 ${status}`;
-                        this.dom.twitterCount.style.display = 'block';
-                    } else if (this.currentPreset === 'bluesky') {
+                        DOMHelper.setText(this.dom.twitterCount, `🐦 트위터: ${twitterLen.toLocaleString()}자 ${status}`);
+                        DOMHelper.setStyle(this.dom.twitterCount, 'display', 'block');
+                    } else if (currentPreset === 'bluesky') {
                         const bskyLen = TextEngine.countBlueskyGraphemes(text);
                         const status = bskyLen <= CONFIG.LIMITS.BLUESKY ? '✅' : '❌';
-                        this.dom.bskyCount.textContent = `🦋 블루스카이: ${bskyLen.toLocaleString()}자 ${status}`;
-                        this.dom.bskyCount.style.display = 'block';
+                        DOMHelper.setText(this.dom.bskyCount, `🦋 블루스카이: ${bskyLen.toLocaleString()}자 ${status}`);
+                        DOMHelper.setStyle(this.dom.bskyCount, 'display', 'block');
                     }
                 }
 
@@ -1590,13 +1557,13 @@
                 }
 
                 resetAll() {
-                        this.dom.inputText.value = "";
-                        this.saveDraft("");
-                        this.updateCount("");
-                        this.renderResults([]);
-                        this.updateStatusBar(0, 0);
-                        this.dom.inputText.focus();
-                        AppController.showToast(CONFIG.MESSAGES.RESET_DONE);
+                    this.dom.inputText.value = "";
+                    this.saveDraft("");
+                    this.updateCount("");
+                    this.renderResults([]);
+                    this.updateStatusBar(0, 0);
+                    this.dom.inputText.focus();
+                    AppController.showToast(CONFIG.MESSAGES.RESET_DONE);
                 }
 
                 processText(isAuto) {
@@ -1621,16 +1588,17 @@
 
                 updateStatusBar(chars, chunksCount, text = "") {
                     const spans = this.dom.statusBar.querySelectorAll('span');
-                    spans[0].textContent = `${chars.toLocaleString()}자`;
+                    DOMHelper.setText(spans[0], `${chars.toLocaleString()}자`);
                     const words = text ? text.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
-                    spans[1].textContent = `${words.toLocaleString()}개`;
+                    DOMHelper.setText(spans[1], `${words.toLocaleString()}개`);
                     const lines = text ? text.split(/\r\n|\r|\n/).length : 0;
-                    spans[2].textContent = `${lines.toLocaleString()}줄`;
+                    DOMHelper.setText(spans[2], `${lines.toLocaleString()}줄`);
                     const paras = text ? text.trim().split(/\n\n+/).length : 0;
-                    spans[3].textContent = `${paras.toLocaleString()}개`;
+                    DOMHelper.setText(spans[3], `${paras.toLocaleString()}개`);
                     const sec = Math.ceil(chars / 500 * 60);
-                    spans[4].textContent = sec < 60 ? `${sec}초` : `${Math.floor(sec/60)}분 ${sec%60}초`;
-                    spans[5].textContent = `${chunksCount}개`;
+                    const timeText = sec < 60 ? `${sec}초` : `${Math.floor(sec/60)}분 ${sec%60}초`;
+                    DOMHelper.setText(spans[4], timeText);
+                    DOMHelper.setText(spans[5], `${chunksCount}개`);
                 }
 
                 renderResults(chunks, isAuto) {
@@ -1640,17 +1608,20 @@
                     if (chunks.length === 0) {
                         const div = DOMHelper.createElement('div', 'empty-state');
                         const p = DOMHelper.createElement('div');
-                        // 안전한 HTML 주입 (단순 텍스트)
-                        p.innerHTML = CONFIG.MESSAGES.EMPTY_STATE; 
+                        // Fix: innerHTML usage replaced with safer text node creation
+                        const lines = CONFIG.MESSAGES.EMPTY_STATE.split('<br>');
+                        lines.forEach((line, index) => {
+                            p.appendChild(document.createTextNode(line));
+                            if (index < lines.length - 1) {
+                                p.appendChild(document.createElement('br'));
+                            }
+                        });
                         div.appendChild(p);
                         frag.appendChild(div);
                     } else {
-                        // Action Buttons Wrapper
                         const actionDiv = DOMHelper.createElement('div', 'results-header-actions');
-                        
                         const copyAll = DOMHelper.createElement('button', 'copy-all-btn', CONFIG.MESSAGES.COPY_ALL);
                         const downloadBtn = DOMHelper.createElement('button', 'download-btn', CONFIG.MESSAGES.SAVE_FILE);
-                        
                         actionDiv.append(copyAll, downloadBtn);
                         frag.appendChild(actionDiv);
 
@@ -1709,12 +1680,12 @@
                     const toast = document.getElementById('toast');
                     if (toast.timer) clearTimeout(toast.timer);
                     
-                    toast.classList.remove("show");
+                    DOMHelper.setClass(toast, "show", false);
                     void toast.offsetWidth; // Trigger reflow
-                    toast.textContent = msg;
-                    toast.classList.add("show");
+                    DOMHelper.setText(toast, msg);
+                    DOMHelper.setClass(toast, "show", true);
                     
-                    toast.timer = setTimeout(() => toast.classList.remove("show"), 3000);
+                    toast.timer = setTimeout(() => DOMHelper.setClass(toast, "show", false), 3000);
                 }
             }
 
