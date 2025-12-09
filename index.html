@@ -440,6 +440,7 @@
             display: flex;
             flex-direction: column;
             gap: 25px;
+            min-height: 100%; /* CLS 방지: 결과 영역 최소 높이 확보 */
         }
         
         .empty-state {
@@ -828,7 +829,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 4.0 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 4.1 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1289,6 +1290,9 @@
             class AppController {
                 constructor() {
                     this.dom = DOMHelper.getElements();
+                    // 상태바 요소 캐싱 (DOM 탐색 최소화)
+                    this.statusSpans = Array.from(this.dom.statusBar.querySelectorAll('span'));
+                    
                     this.settings = {
                         limit: 300,
                         urlMode: 'off',
@@ -1587,18 +1591,30 @@
                 }
 
                 updateStatusBar(chars, chunksCount, text = "") {
-                    const spans = this.dom.statusBar.querySelectorAll('span');
-                    DOMHelper.setText(spans[0], `${chars.toLocaleString()}자`);
+                    // 계산을 먼저 수행
                     const words = text ? text.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
-                    DOMHelper.setText(spans[1], `${words.toLocaleString()}개`);
                     const lines = text ? text.split(/\r\n|\r|\n/).length : 0;
-                    DOMHelper.setText(spans[2], `${lines.toLocaleString()}줄`);
                     const paras = text ? text.trim().split(/\n\n+/).length : 0;
-                    DOMHelper.setText(spans[3], `${paras.toLocaleString()}개`);
                     const sec = Math.ceil(chars / 500 * 60);
                     const timeText = sec < 60 ? `${sec}초` : `${Math.floor(sec/60)}분 ${sec%60}초`;
-                    DOMHelper.setText(spans[4], timeText);
-                    DOMHelper.setText(spans[5], `${chunksCount}개`);
+
+                    const values = [
+                        `${chars.toLocaleString()}자`,
+                        `${words.toLocaleString()}개`,
+                        `${lines.toLocaleString()}줄`,
+                        `${paras.toLocaleString()}개`,
+                        timeText,
+                        `${chunksCount}개`
+                    ];
+
+                    // DOM 조작 최적화: requestAnimationFrame으로 배칭하여 한 번에 업데이트
+                    requestAnimationFrame(() => {
+                        values.forEach((val, index) => {
+                            if (this.statusSpans[index]) {
+                                DOMHelper.setText(this.statusSpans[index], val);
+                            }
+                        });
+                    });
                 }
 
                 renderResults(chunks, isAuto) {
