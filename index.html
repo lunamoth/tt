@@ -841,7 +841,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 4.3 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 4.5 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1417,6 +1417,10 @@
 
                     this.saveSettings();
                     this.checkActivePreset(); // Sync preset UI state on any change
+
+                    // --- 추가: 설정이 바뀌면 카운터 UI도 즉시 갱신 (트위터/블루스카이 등) ---
+                    this.updateCount(this.dom.inputText.value);
+                    // -----------------------------------------------------------------
                 }
 
                 bindEvents() {
