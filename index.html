@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;">
-    <title>✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기</title>
+    <title>✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기</title>
     <style>
         :root {
             /* 색상 팔레트 재정의: 미니멀 & 플랫 */
@@ -351,7 +351,7 @@
             margin-top: 4px;
         }
 
-        /* 쪼개기 버튼 강조 */
+        /* 자르기 버튼 강조 */
         button.split-btn {
             background: var(--primary-color);
             color: white;
@@ -805,7 +805,7 @@
                         <input type="file" id="fileInput" hidden accept=".txt,text/plain">
                         <button class="file-btn" id="btn-file">📂 파일</button>
                         <button class="reset-btn" id="btn-reset">🔄 초기화</button>
-                        <button class="split-btn" id="btn-split">쪼개기 ⚡️</button>
+                        <button class="split-btn" id="btn-split">자르기 ⚡️</button>
                     </div>
                 </div>
             </div>
@@ -842,7 +842,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 4.6 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 4.7 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -860,7 +860,7 @@
                     RESET_CONFIRM: "모든 내용을 지우고 초기화하시겠습니까?",
                     RESET_DONE: "🗑️ 초기화되었습니다.",
                     SETTINGS_DONE: "자 설정 완료",
-                    SPLIT_DONE: "🎉 쪼개기 완료! 첫 번째 글이 복사되었어요 📋",
+                    SPLIT_DONE: "🎉 자르기 완료! 첫 번째 글이 복사되었어요 📋",
                     COPY_ALL: "📑 전체 복사",
                     SAVE_FILE: "💾 저장",
                     COPY_BTN: "📋 복사하기",
