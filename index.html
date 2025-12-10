@@ -752,6 +752,22 @@
                         <label for="limit">📏 제한 글자수</label>
                         <input type="number" id="limit" value="300" min="10" max="2000">
                     </div>
+
+                    <div class="input-group">
+                        <label for="numberFormat">🔢 번호 서식</label>
+                        <select id="numberFormat">
+                            <option value="thread" selected>(🧵1/n)</option>
+                            <option value="memo">(📝1/n)</option>
+                            <option value="finger">(👇1/n)</option>
+                            <option value="google">구글 트위터 방식</option>
+                            <option value="korean_cont">(위에서 이어짐) (계속)</option>
+                            <option value="bracket">[1/n]</option>
+                            <option value="simple">1/n</option>
+                            <option value="paren">(1/n)</option>
+                            <option value="custom">직접 입력...</option>
+                        </select>
+                        <input type="text" id="customFormatInput" placeholder="예: {current}/{total} 페이지">
+                    </div>
                     
                     <div class="input-group">
                         <label for="position">📍 번호 위치</label>
@@ -767,19 +783,6 @@
                             <option value="on" selected>켜기 (기본)</option>
                             <option value="off">끄기 (꽉 채우기)</option>
                         </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="numberFormat">🔢 번호 서식</label>
-                        <select id="numberFormat">
-                            <option value="thread" selected>(🧵1/n)</option>
-                            <option value="bracket">[1/n]</option>
-                            <option value="simple">1/n</option>
-                            <option value="paren">(1/n)</option>
-                            <option value="google">구글 트위터</option>
-                            <option value="custom">직접 입력...</option>
-                        </select>
-                        <input type="text" id="customFormatInput" placeholder="예: {current}/{total} 페이지">
                     </div>
 
                     <div class="input-group">
@@ -842,7 +845,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 4.7 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 5.0 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1096,13 +1099,34 @@
                 static format(chunk, options, current, total) {
                     const { position, format, customFormatStr } = options;
                     
-                    // --- [추가] 구글 트위터 스타일 처리 ---
+                    // --- [기존] 구글 트위터 스타일 처리 ---
                     if (format === 'google') {
                         const cleanChunk = chunk.replace(/\s+$/, '');
                         if (current === 1) {
                             return `${cleanChunk} 🧵`;
                         } else {
                             return `🧵(${current}/${total}) ${cleanChunk}`;
+                        }
+                    }
+
+                    // --- [추가] 3. 글로 연결 모드 (위에서 이어짐 / 계속) ---
+                    if (format === 'korean_cont') {
+                        const cleanChunk = chunk.replace(/\s+$/, '');
+                        // 전체가 1개인 경우 연결 문구 없음
+                        if (total === 1) return cleanChunk;
+
+                        const header = "(위에서 이어짐)\n\n";
+                        const footer = "\n\n(계속)";
+
+                        if (current === 1) {
+                            // 첫 번째: 본문 + (계속)
+                            return `${cleanChunk}${footer}`;
+                        } else if (current === total) {
+                            // 마지막: (위에서 이어짐) + 본문
+                            return `${header}${cleanChunk}`;
+                        } else {
+                            // 중간: (위에서 이어짐) + 본문 + (계속)
+                            return `${header}${cleanChunk}${footer}`;
                         }
                     }
                     // ------------------------------------
@@ -1119,7 +1143,11 @@
                             'bracket': `[${current}/${total}]`,
                             'simple': `${current}/${total}`,
                             'paren': `(${current}/${total})`,
-                            'thread': `(🧵${current}/${total})`
+                            'thread': `(🧵${current}/${total})`,
+                            // --- [추가] 1. 메모 스타일 ---
+                            'memo': `(📝${current}/${total})`,
+                            // --- [추가] 2. 손가락 스타일 ---
+                            'finger': `(👇${current}/${total})`
                         };
                         numbering = map[format] || map['thread'];
                     }
