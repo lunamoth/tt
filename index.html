@@ -776,6 +776,7 @@
                             <option value="bracket">[1/n]</option>
                             <option value="simple">1/n</option>
                             <option value="paren">(1/n)</option>
+                            <option value="google">구글 트위터</option>
                             <option value="custom">직접 입력...</option>
                         </select>
                         <input type="text" id="customFormatInput" placeholder="예: {current}/{total} 페이지">
@@ -841,7 +842,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 4.5 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
+                VERSION: "타래 재단사 4.6 - 블루스카이, 트위터, 스레드를 위한 긴 글 쪼개기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1094,6 +1095,18 @@
 
                 static format(chunk, options, current, total) {
                     const { position, format, customFormatStr } = options;
+                    
+                    // --- [추가] 구글 트위터 스타일 처리 ---
+                    if (format === 'google') {
+                        const cleanChunk = chunk.replace(/\s+$/, '');
+                        if (current === 1) {
+                            return `${cleanChunk} 🧵`;
+                        } else {
+                            return `🧵(${current}/${total}) ${cleanChunk}`;
+                        }
+                    }
+                    // ------------------------------------
+
                     let numbering = '';
                     
                     if (format === 'custom') {
