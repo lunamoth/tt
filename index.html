@@ -3,20 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    <!-- Three.js CDN 추가 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data:;">
     <title>✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기</title>
     <style>
         :root {
             /* 색상 팔레트 재정의: 미니멀 & 플랫 */
             --primary-color: #6366f1;
             --primary-light: #818cf8;
-            --bg-color: #f8f9fc; /* 그라디언트 대신 단색 혹은 아주 은은한 배경 */
-            --bg-gradient: linear-gradient(180deg, #f8f9fc 0%, #edf2f7 100%);
+            /* 배경을 투명하게 변경하여 Three.js가 보이도록 함 */
+            --bg-color: transparent; 
+            --bg-gradient: transparent;
+            
             --text-color: #1e293b;
             --gray-color: #64748b;
             --border-color: #e2e8f0;
-            --input-bg: #ffffff;
-            --card-bg: #ffffff;
+            
+            /* 가독성을 위해 UI 요소의 배경 불투명도 조정 */
+            --input-bg: rgba(255, 255, 255, 0.85);
+            --card-bg: rgba(255, 255, 255, 0.9);
             --avatar-bg: #eff6ff;
             
             /* 그림자: 박스 테두리 대신 깊이감 표현 */
@@ -29,13 +35,15 @@
 
         /* 다크 모드 */
         [data-theme="dark"] {
-            --bg-color: #0f172a;
-            --bg-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            --bg-color: transparent;
+            --bg-gradient: transparent;
             --text-color: #f1f5f9;
             --gray-color: #94a3b8;
             --border-color: #334155;
-            --input-bg: #1e293b;
-            --card-bg: #1e293b;
+            
+            /* 가독성을 위해 UI 요소의 배경 불투명도 조정 */
+            --input-bg: rgba(30, 41, 59, 0.85);
+            --card-bg: rgba(30, 41, 59, 0.9);
             --avatar-bg: #334155;
             
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
@@ -47,6 +55,23 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+
+        /* Three.js 캔버스 컨테이너 */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: #f8f9fc; /* 로딩 전 기본 배경 */
+            transition: background-color 0.5s ease;
+        }
+        
+        [data-theme="dark"] #canvas-container {
+            background: #0f172a;
         }
 
         body {
@@ -76,6 +101,7 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            z-index: 1; /* Three.js 위에 표시 */
         }
 
         header {
@@ -92,7 +118,8 @@
             position: absolute;
             right: 0;
             top: 0;
-            background: transparent;
+            background: var(--input-bg); /* 배경 추가 */
+            backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
             color: var(--text-color);
             padding: 10px 14px;
@@ -115,6 +142,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.02em;
+            text-shadow: 0 2px 10px rgba(99, 102, 241, 0.1);
         }
 
         p.subtitle {
@@ -125,6 +153,11 @@
             font-weight: 400;
             word-break: keep-all;
             line-height: 1.6;
+            background: var(--input-bg); /* 가독성 확보 */
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
         }
 
         /* --- [추가] 링크 스타일 --- */
@@ -198,6 +231,7 @@
         .preset-btn {
             flex: 1;
             background: var(--input-bg);
+            backdrop-filter: blur(10px);
             border: 1px solid transparent;
             color: var(--gray-color);
             padding: 12px;
@@ -261,6 +295,11 @@
             color: var(--gray-color);
             margin-bottom: 8px;
             letter-spacing: 0.02em;
+            background: var(--input-bg);
+            display: inline-block;
+            width: fit-content;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         /* 입력 필드: 종이 위에 떠있는 느낌 */
@@ -275,6 +314,7 @@
             transition: all 0.2s;
             width: 100%;
             background-color: var(--input-bg);
+            backdrop-filter: blur(10px);
             color: var(--text-color);
             box-shadow: var(--shadow-sm);
         }
@@ -312,6 +352,7 @@
             transition: all 0.2s;
             font-family: inherit;
             background-color: var(--input-bg);
+            backdrop-filter: blur(10px);
             color: var(--text-color);
             box-shadow: var(--shadow-md);
         }
@@ -345,10 +386,18 @@
             font-weight: 600;
             color: var(--text-color);
             margin-bottom: 4px;
+            background: var(--input-bg);
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline-block;
         }
         
         #twitterCount, #bskyCount {
             margin-top: 4px;
+            background: var(--input-bg);
+            padding: 2px 6px;
+            border-radius: 6px;
+            display: inline-block;
         }
 
         /* 자르기 버튼 강조 */
@@ -377,7 +426,8 @@
 
         /* 일반 버튼: 고스트 스타일 */
         button.reset-btn, button.file-btn {
-            background: transparent;
+            background: var(--input-bg);
+            backdrop-filter: blur(5px);
             color: var(--gray-color);
             border: 1px solid var(--border-color);
             padding: 12px 20px;
@@ -464,12 +514,17 @@
             flex-direction: column;
             justify-content: center;
             height: 100%;
-            opacity: 0.6;
+            opacity: 0.8;
+            background: var(--input-bg);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            margin-top: 20px;
         }
 
         /* 트윗 카드: 테두리 제거, 그림자 강조 */
         .tweet-card {
             background: var(--card-bg);
+            backdrop-filter: blur(10px);
             border: none; /* 테두리 제거 */
             border-radius: 20px;
             padding: 30px;
@@ -603,16 +658,16 @@
             display: flex;
             justify-content: center;
             gap: 30px;
-            background: transparent;
-            padding: 20px 0 0 0;
-            border-radius: 0;
+            background: var(--input-bg);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 16px;
             margin-top: 10px;
-            border: none;
-            border-top: 1px solid var(--border-color); /* 상단 구분선만 유지 */
+            border: 1px solid var(--border-color);
             font-size: 0.9rem;
             color: var(--gray-color);
             flex-shrink: 0;
-            box-shadow: none;
+            box-shadow: var(--shadow-sm);
             flex-wrap: wrap;
         }
 
@@ -718,6 +773,9 @@
     </style>
 </head>
 <body>
+
+    <!-- Three.js Canvas Container -->
+    <div id="canvas-container"></div>
 
     <div class="container">
         <header>
@@ -845,7 +903,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 5.0 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 6.0 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1770,6 +1828,126 @@
 
             // 앱 시작
             new AppController();
+
+        })();
+    </script>
+    
+    <!-- Three.js Background Interaction Script -->
+    <script>
+        (function() {
+            // Three.js Setup - 'Digital Threads' Theme
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            // Theme Colors
+            const colors = {
+                light: { bg: 0xf8f9fc, mesh: 0x6366f1, particle: 0x818cf8 },
+                dark: { bg: 0x0f172a, mesh: 0x818cf8, particle: 0x6366f1 }
+            };
+
+            // Detect initial theme
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            let currentColors = isDark ? colors.dark : colors.light;
+
+            // Geometry: Network of threads (Icosahedron)
+            const geometry = new THREE.IcosahedronGeometry(10, 1);
+            const wireframeMaterial = new THREE.MeshBasicMaterial({ 
+                color: currentColors.mesh, 
+                wireframe: true, 
+                transparent: true, 
+                opacity: 0.1 
+            });
+            const sphere = new THREE.Mesh(geometry, wireframeMaterial);
+            scene.add(sphere);
+
+            // Particles: Floating text bits
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 700;
+            const posArray = new Float32Array(particlesCount * 3);
+
+            for(let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 40; // Spread out
+            }
+
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.08,
+                color: currentColors.particle,
+                transparent: true,
+                opacity: 0.6
+            });
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+
+            camera.position.z = 15;
+
+            // Mouse Interaction
+            let mouseX = 0;
+            let mouseY = 0;
+            let targetX = 0;
+            let targetY = 0;
+
+            const windowHalfX = window.innerWidth / 2;
+            const windowHalfY = window.innerHeight / 2;
+
+            document.addEventListener('mousemove', (event) => {
+                mouseX = (event.clientX - windowHalfX);
+                mouseY = (event.clientY - windowHalfY);
+            });
+
+            // Update Theme Function
+            function updateThreeTheme(theme) {
+                const c = theme === 'dark' ? colors.dark : colors.light;
+                wireframeMaterial.color.setHex(c.mesh);
+                particlesMaterial.color.setHex(c.particle);
+                // Background color is handled by CSS, Three.js is transparent
+            }
+
+            // Hook into existing theme toggle
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                const newTheme = document.documentElement.getAttribute('data-theme');
+                updateThreeTheme(newTheme);
+            });
+
+            // Animation Loop
+            const clock = new THREE.Clock();
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                const elapsedTime = clock.getElapsedTime();
+
+                // Rotate Sphere
+                sphere.rotation.y += 0.002;
+                sphere.rotation.x += 0.001;
+
+                // Move Particles gently
+                particlesMesh.rotation.y = -elapsedTime * 0.05;
+                particlesMesh.rotation.x = elapsedTime * 0.02;
+
+                // Mouse Parallax
+                targetX = mouseX * 0.001;
+                targetY = mouseY * 0.001;
+
+                sphere.rotation.y += 0.05 * (targetX - sphere.rotation.y);
+                sphere.rotation.x += 0.05 * (targetY - sphere.rotation.x);
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
 
         })();
     </script>
