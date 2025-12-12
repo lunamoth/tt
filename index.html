@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Three.js CDN 추가 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data:;">
     <title>✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기</title>
     <style>
@@ -12,8 +10,8 @@
             /* 색상 팔레트 재정의: 미니멀 & 플랫 */
             --primary-color: #6366f1;
             --primary-light: #818cf8;
-            /* 배경을 투명하게 변경하여 Three.js가 보이도록 함 */
-            --bg-color: transparent; 
+            /* Three.js 제거로 배경색을 캔버스 대신 여기에 직접 지정 */
+            --bg-color: #f8f9fc; 
             --bg-gradient: transparent;
             
             --text-color: #1e293b;
@@ -35,7 +33,7 @@
 
         /* 다크 모드 */
         [data-theme="dark"] {
-            --bg-color: transparent;
+            --bg-color: #0f172a;
             --bg-gradient: transparent;
             --text-color: #f1f5f9;
             --gray-color: #94a3b8;
@@ -57,26 +55,9 @@
             padding: 0;
         }
 
-        /* Three.js 캔버스 컨테이너 */
-        #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-            background: #f8f9fc; /* 로딩 전 기본 배경 */
-            transition: background-color 0.5s ease;
-        }
-        
-        [data-theme="dark"] #canvas-container {
-            background: #0f172a;
-        }
-
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            background: var(--bg-gradient);
+            background: var(--bg-color);
             height: 100vh; 
             height: 100dvh;
             display: flex;
@@ -101,7 +82,7 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            z-index: 1; /* Three.js 위에 표시 */
+            z-index: 1; 
         }
 
         header {
@@ -774,9 +755,6 @@
 </head>
 <body>
 
-    <!-- Three.js Canvas Container -->
-    <div id="canvas-container"></div>
-
     <div class="container">
         <header>
             <h1 id="appTitle">✂️ 타래 재단사</h1>
@@ -903,7 +881,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 6.0 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 6.1 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1828,126 +1806,6 @@
 
             // 앱 시작
             new AppController();
-
-        })();
-    </script>
-    
-    <!-- Three.js Background Interaction Script -->
-    <script>
-        (function() {
-            // Three.js Setup - 'Digital Threads' Theme
-            const container = document.getElementById('canvas-container');
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            container.appendChild(renderer.domElement);
-
-            // Theme Colors
-            const colors = {
-                light: { bg: 0xf8f9fc, mesh: 0x6366f1, particle: 0x818cf8 },
-                dark: { bg: 0x0f172a, mesh: 0x818cf8, particle: 0x6366f1 }
-            };
-
-            // Detect initial theme
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            let currentColors = isDark ? colors.dark : colors.light;
-
-            // Geometry: Network of threads (Icosahedron)
-            const geometry = new THREE.IcosahedronGeometry(10, 1);
-            const wireframeMaterial = new THREE.MeshBasicMaterial({ 
-                color: currentColors.mesh, 
-                wireframe: true, 
-                transparent: true, 
-                opacity: 0.1 
-            });
-            const sphere = new THREE.Mesh(geometry, wireframeMaterial);
-            scene.add(sphere);
-
-            // Particles: Floating text bits
-            const particlesGeometry = new THREE.BufferGeometry();
-            const particlesCount = 700;
-            const posArray = new Float32Array(particlesCount * 3);
-
-            for(let i = 0; i < particlesCount * 3; i++) {
-                posArray[i] = (Math.random() - 0.5) * 40; // Spread out
-            }
-
-            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            const particlesMaterial = new THREE.PointsMaterial({
-                size: 0.08,
-                color: currentColors.particle,
-                transparent: true,
-                opacity: 0.6
-            });
-            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-            scene.add(particlesMesh);
-
-            camera.position.z = 15;
-
-            // Mouse Interaction
-            let mouseX = 0;
-            let mouseY = 0;
-            let targetX = 0;
-            let targetY = 0;
-
-            const windowHalfX = window.innerWidth / 2;
-            const windowHalfY = window.innerHeight / 2;
-
-            document.addEventListener('mousemove', (event) => {
-                mouseX = (event.clientX - windowHalfX);
-                mouseY = (event.clientY - windowHalfY);
-            });
-
-            // Update Theme Function
-            function updateThreeTheme(theme) {
-                const c = theme === 'dark' ? colors.dark : colors.light;
-                wireframeMaterial.color.setHex(c.mesh);
-                particlesMaterial.color.setHex(c.particle);
-                // Background color is handled by CSS, Three.js is transparent
-            }
-
-            // Hook into existing theme toggle
-            document.getElementById('themeToggle').addEventListener('click', () => {
-                const newTheme = document.documentElement.getAttribute('data-theme');
-                updateThreeTheme(newTheme);
-            });
-
-            // Animation Loop
-            const clock = new THREE.Clock();
-
-            function animate() {
-                requestAnimationFrame(animate);
-
-                const elapsedTime = clock.getElapsedTime();
-
-                // Rotate Sphere
-                sphere.rotation.y += 0.002;
-                sphere.rotation.x += 0.001;
-
-                // Move Particles gently
-                particlesMesh.rotation.y = -elapsedTime * 0.05;
-                particlesMesh.rotation.x = elapsedTime * 0.02;
-
-                // Mouse Parallax
-                targetX = mouseX * 0.001;
-                targetY = mouseY * 0.001;
-
-                sphere.rotation.y += 0.05 * (targetX - sphere.rotation.y);
-                sphere.rotation.x += 0.05 * (targetY - sphere.rotation.x);
-
-                renderer.render(scene, camera);
-            }
-
-            animate();
-
-            // Handle Resize
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
 
         })();
     </script>
