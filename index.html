@@ -8,23 +8,25 @@
 	
     <style>
         :root {
-            /* 색상 팔레트 재정의: 미니멀 & 플랫 */
+            /* 색상 팔레트 재정의: 미니멀 & 플랫 & No Border */
             --primary-color: #6366f1;
             --primary-light: #818cf8;
-            /* Three.js 제거로 배경색을 캔버스 대신 여기에 직접 지정 */
+            
             --bg-color: #f8f9fc; 
             --bg-gradient: transparent;
             
             --text-color: #1e293b;
             --gray-color: #64748b;
-            --border-color: #e2e8f0;
+            
+            /* border-color를 투명하게 설정하여 전역적으로 선 제거 */
+            --border-color: transparent;
             
             /* 가독성을 위해 UI 요소의 배경 불투명도 조정 */
             --input-bg: rgba(255, 255, 255, 0.85);
             --card-bg: rgba(255, 255, 255, 0.9);
             --avatar-bg: #eff6ff;
             
-            /* 그림자: 박스 테두리 대신 깊이감 표현 */
+            /* 그림자: 선 대신 깊이감으로 구분 */
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
             --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
             --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
@@ -38,9 +40,8 @@
             --bg-gradient: transparent;
             --text-color: #f1f5f9;
             --gray-color: #94a3b8;
-            --border-color: #334155;
+            --border-color: transparent;
             
-            /* 가독성을 위해 UI 요소의 배경 불투명도 조정 */
             --input-bg: rgba(30, 41, 59, 0.85);
             --card-bg: rgba(30, 41, 59, 0.9);
             --avatar-bg: #334155;
@@ -64,13 +65,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 0; /* 패딩 제거하여 전체 화면 활용 */
+            padding: 0;
             color: var(--text-color);
             overflow: hidden;
             transition: background 0.3s ease;
         }
 
-        /* 컨테이너: 박스 형태 제거 (투명화) */
+        /* 컨테이너 */
         .container {
             background: transparent;
             width: 100%; 
@@ -87,40 +88,41 @@
         }
 
         header {
-            text-align: left; /* 왼쪽 정렬로 변경하여 깔끔하게 */
+            text-align: left;
             margin-bottom: 30px;
             flex-shrink: 0;
             position: relative;
             padding-bottom: 20px;
-            border-bottom: 1px solid transparent; /* 구분선 제거 */
+            border: none; /* 선 제거 */
         }
 
-        /* 다크 모드 토글 버튼 */
+        /* 다크 모드 토글 버튼: 테두리 제거 */
         .theme-toggle-btn {
             position: absolute;
             right: 0;
             top: 0;
-            background: var(--input-bg); /* 배경 추가 */
+            background: var(--input-bg);
             backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
+            border: none; /* 선 제거 */
             color: var(--text-color);
             padding: 10px 14px;
             border-radius: 50%;
             cursor: pointer;
             font-size: 1.2rem;
             transition: all 0.2s;
+            box-shadow: var(--shadow-sm); /* 선 대신 그림자 */
         }
         .theme-toggle-btn:hover {
             background: var(--input-bg);
-            border-color: var(--primary-color);
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
 
         h1 {
             font-size: 2.2rem;
             font-weight: 800;
             margin-bottom: 8px;
-            background: linear-gradient(135deg, #6366f1, #a855f7); /* 조금 더 선명한 그라디언트 */
+            background: linear-gradient(135deg, #6366f1, #a855f7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.02em;
@@ -135,28 +137,27 @@
             font-weight: 400;
             word-break: keep-all;
             line-height: 1.6;
-            background: var(--input-bg); /* 가독성 확보 */
+            background: var(--input-bg);
             display: inline-block;
             padding: 4px 8px;
             border-radius: 8px;
             backdrop-filter: blur(4px);
         }
 
-        /* --- [추가] 링크 스타일 --- */
+        /* 링크 스타일: 밑줄 제거, 굵기와 색상으로 구분 */
         p.subtitle a {
-            color: inherit;             /* 부모 텍스트 색상 상속 */
-            text-decoration: underline; /* 밑줄 추가 */
-            text-underline-offset: 3px; /* 밑줄 간격 */
+            color: inherit;
+            text-decoration: none; /* 밑줄 제거 */
+            font-weight: 700;      /* 굵게 */
             transition: color 0.2s;
         }
         p.subtitle a:hover {
-            color: var(--primary-color); /* 호버 시 포인트 컬러 */
+            color: var(--primary-color);
         }
-        /* ----------------------- */
 
         .layout-wrapper {
             display: flex;
-            gap: 60px; /* 패널 간격 넓힘 */
+            gap: 60px;
             align-items: flex-start;
             flex: 1;
             overflow: hidden;
@@ -170,11 +171,10 @@
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            padding-right: 15px; /* 스크롤바 공간 */
+            padding-right: 15px;
             padding-bottom: 20px;
         }
 
-        /* 오른쪽 패널 배경/테두리 제거 */
         .right-panel {
             background: transparent;
             border-radius: 0;
@@ -189,11 +189,10 @@
         }
         .left-panel::-webkit-scrollbar-thumb,
         .right-panel::-webkit-scrollbar-thumb {
-            background-color: var(--border-color);
+            background-color: rgba(150, 150, 150, 0.2); /* 경계선 없이 부드러운 색 */
             border-radius: 10px;
         }
 
-        /* 프리셋 영역: 박스 제거 */
         .preset-wrapper {
             background: transparent;
             padding: 0;
@@ -209,12 +208,12 @@
             margin-top: 10px;
         }
 
-        /* 프리셋 버튼: 탭 형태 */
+        /* 프리셋 버튼: 테두리 제거 */
         .preset-btn {
             flex: 1;
             background: var(--input-bg);
             backdrop-filter: blur(10px);
-            border: 1px solid transparent;
+            border: none; /* 선 제거 */
             color: var(--gray-color);
             padding: 12px;
             border-radius: 12px;
@@ -227,7 +226,7 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            box-shadow: var(--shadow-sm); /* 미세한 그림자 */
+            box-shadow: var(--shadow-sm);
         }
 
         .preset-btn span.limit-badge {
@@ -244,12 +243,11 @@
 
         .preset-btn.active {
             background: var(--primary-color);
-            border-color: var(--primary-color);
+            border: none; /* 선 제거 */
             color: white;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
-        /* 컨트롤 영역: 박스 제거 및 그리드 배치 */
         .controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -284,15 +282,15 @@
             border-radius: 4px;
         }
 
-        /* 입력 필드: 종이 위에 떠있는 느낌 */
+        /* 입력 필드: 테두리 완전 제거 */
         input[type="number"], 
         input[type="text"],
         select {
             padding: 12px;
-            border: 1px solid transparent;
+            border: none; /* 선 제거 */
             border-radius: 12px;
             font-size: 1rem;
-            outline: none;
+            outline: none; /* 포커스 아웃라인 제거 */
             transition: all 0.2s;
             width: 100%;
             background-color: var(--input-bg);
@@ -304,10 +302,15 @@
         input[type="number"]:focus,
         input[type="text"]:focus,
         select:focus {
-            box-shadow: 0 0 0 2px var(--primary-light);
+            /* 선 대신 부드러운 글로우 효과 */
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.15);
+            background-color: #fff;
+        }
+        [data-theme="dark"] input:focus,
+        [data-theme="dark"] select:focus {
+            background-color: #2c3646;
         }
         
-        /* 커스텀 포맷 입력창 */
         #customFormatInput {
             margin-top: 8px;
             display: none;
@@ -318,14 +321,14 @@
             animation: fadeIn 0.3s ease;
         }
 
-        /* 텍스트 영역: 넓고 시원하게 */
+        /* 텍스트 영역: 테두리 제거 */
         textarea {
             width: 100%;
             flex: 1;
             min-height: 250px;
             padding: 24px;
-            border: 1px solid transparent;
-            border-radius: 24px; /* 더 둥글게 */
+            border: none; /* 선 제거 */
+            border-radius: 24px;
             resize: none;
             font-size: 1.1rem;
             line-height: 1.7;
@@ -339,20 +342,25 @@
             box-shadow: var(--shadow-md);
         }
         
+        /* 드래그 오버 시 점선 제거 -> 배경색 변경 */
         textarea.drag-over {
-            border: 2px dashed var(--primary-color);
-            background-color: rgba(99, 102, 241, 0.05);
+            border: none; /* 선 제거 */
+            background-color: rgba(99, 102, 241, 0.1);
             transform: scale(0.99);
         }
 
         textarea:focus {
             box-shadow: var(--shadow-lg);
+            background-color: #fff;
+        }
+        [data-theme="dark"] textarea:focus {
+            background-color: #2c3646;
         }
 
         .action-area {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end; /* 하단 정렬 */
+            align-items: flex-end;
             margin-bottom: 10px;
             flex-shrink: 0;
             padding: 5px 0;
@@ -382,7 +390,6 @@
             display: inline-block;
         }
 
-        /* 자르기 버튼 강조 */
         button.split-btn {
             background: var(--primary-color);
             color: white;
@@ -406,30 +413,33 @@
             transform: translateY(0);
         }
 
-        /* 일반 버튼: 고스트 스타일 */
+        /* 일반 버튼: 테두리 제거 */
         button.reset-btn, button.file-btn {
             background: var(--input-bg);
             backdrop-filter: blur(5px);
             color: var(--gray-color);
-            border: 1px solid var(--border-color);
+            border: none; /* 선 제거 */
             padding: 12px 20px;
             border-radius: 14px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            box-shadow: var(--shadow-sm); /* 선 대신 그림자 */
         }
 
         button.reset-btn:hover {
-            background: rgba(239, 68, 68, 0.05);
+            background: rgba(239, 68, 68, 0.1);
             color: #ef4444; 
-            border-color: #ef4444;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
         
         button.file-btn:hover {
-            background: rgba(99, 102, 241, 0.05);
+            background: rgba(99, 102, 241, 0.1);
             color: var(--primary-color);
-            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
 
         button.reset-btn:active, button.file-btn:active {
@@ -464,8 +474,9 @@
         .download-btn {
             background: var(--input-bg);
             color: var(--text-color);
-            border: 1px solid transparent;
+            border: none; /* 선 제거 */
             flex: 0.4;
+            box-shadow: var(--shadow-sm);
         }
 
         .copy-all-btn:hover {
@@ -478,13 +489,14 @@
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
             color: var(--primary-color);
+            background: var(--input-bg);
         }
 
         .results {
             display: flex;
             flex-direction: column;
             gap: 25px;
-            min-height: 100%; /* CLS 방지: 결과 영역 최소 높이 확보 */
+            min-height: 100%;
         }
         
         .empty-state {
@@ -501,13 +513,14 @@
             backdrop-filter: blur(5px);
             border-radius: 20px;
             margin-top: 20px;
+            border: none; /* 선 제거 */
         }
 
-        /* 트윗 카드: 테두리 제거, 그림자 강조 */
+        /* 트윗 카드: 테두리 완전 제거 */
         .tweet-card {
             background: var(--card-bg);
             backdrop-filter: blur(10px);
-            border: none; /* 테두리 제거 */
+            border: none; 
             border-radius: 20px;
             padding: 30px;
             position: relative;
@@ -518,8 +531,9 @@
             box-shadow: var(--shadow-md);
         }
 
+        /* 경고 상태: 선 대신 글로우(그림자) 효과 */
         .tweet-card.warning {
-            box-shadow: 0 0 0 2px #f59e0b, var(--shadow-md); /* 테두리 대신 글로우 효과 */
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
         }
 
         .tweet-card:hover {
@@ -561,13 +575,14 @@
             color: var(--gray-color);
         }
 
+        /* 카드 메타 헤더: 점선 제거 */
         .card-meta-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px dashed var(--border-color);
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: none; /* 점선 제거 */
         }
 
         .badge {
@@ -602,11 +617,10 @@
             color: var(--text-color);
         }
 
-        /* 복사 버튼: 배경 없이 미니멀하게 */
         .copy-btn {
             background: var(--bg-color);
             color: var(--text-color);
-            border: 1px solid transparent;
+            border: none; /* 선 제거 */
             padding: 12px 16px;
             border-radius: 12px;
             font-size: 0.95rem;
@@ -619,10 +633,15 @@
             width: 100%;
             justify-content: center;
             margin-top: auto;
+            box-shadow: var(--shadow-sm); /* 아주 약한 그림자 추가 */
         }
 
         .copy-btn:hover {
-            background: var(--border-color);
+            background: var(--border-color); /* 투명 */
+            background-color: rgba(0,0,0,0.05); /* 약간의 음영 */
+        }
+        [data-theme="dark"] .copy-btn:hover {
+            background-color: rgba(255,255,255,0.05);
         }
 
         .copy-btn.copied {
@@ -635,7 +654,7 @@
             color: #86efac;
         }
 
-        /* 상태바: 박스 제거 */
+        /* 상태바: 테두리 제거 */
         .status-bar {
             display: flex;
             justify-content: center;
@@ -645,7 +664,7 @@
             padding: 15px;
             border-radius: 16px;
             margin-top: 10px;
-            border: 1px solid var(--border-color);
+            border: none; /* 선 제거 */
             font-size: 0.9rem;
             color: var(--gray-color);
             flex-shrink: 0;
@@ -750,7 +769,7 @@
             .preset-buttons { gap: 10px; }
             .preset-btn { font-size: 0.9rem; padding: 10px; }
             .theme-toggle-btn { top: 0; right: 0; position: absolute; }
-            .status-bar { flex-direction: column; gap: 10px; text-align: center; border-top: none; }
+            .status-bar { flex-direction: column; gap: 10px; text-align: center; border: none; }
         }
     </style>
 </head>
@@ -882,7 +901,7 @@
 
             // 1. 상수 및 설정 관리 (매직 넘버 제거)
             const CONFIG = {
-                VERSION: "타래 재단사 6.1 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 6.5 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
