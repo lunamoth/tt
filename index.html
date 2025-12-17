@@ -6,89 +6,83 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data:;">
     <title>✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기</title>
     
+    <!-- Pretendard Font for non-Windows platforms to maintain clean look -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.8/static/pretendard.css" />
+
     <style>
         /* 
          * Windows 11 Fluent Design System (WinUI 3) Implementation 
-         * Fixed Scaling Issue: Rem units now respect --app-base-size
          */
 
-        @font-face {
-            font-family: 'Segoe UI Variable';
-            src: local('Segoe UI Variable'), local('Segoe UI'), url('https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.8/static/woff2/Pretendard-Regular.woff2') format('woff2');
-            font-weight: 400;
-            font-style: normal;
-        }
-
         :root {
-            /* 
-             * [설정] 폰트 크기 및 스케일 조절 변수 
-             * 이 숫자(px)를 변경하면 앱의 모든 요소(폰트, 여백, 버튼 크기)가 비율대로 커지거나 작아집니다.
-             * 추천: 14px (작게) ~ 18px (크게)
-             */
-            --app-base-size: 18px;
-
-            /* Win11 Colors */
-            --mica-bg: #f3f3f3; 
-            --layer-card: #ffffff; 
-            --layer-stroke: rgba(0, 0, 0, 0.0578);
+            /* Typography */
+            --font-family: 'Segoe UI Variable', 'Segoe UI', 'Pretendard', -apple-system, sans-serif;
             
+            /* Sizing */
+            --app-base-size: 18px;
+            --radius-control: 4px;
+            --radius-layer: 8px;
+            --radius-window: 12px;
+
+            /* Light Theme Tokens (WinUI 3 Default) */
+            --mica-bg: #f3f3f3; /* Mica Alt */
+            --layer-fill: #ffffff;
+            --layer-fill-secondary: #f9f9f9;
+            
+            --text-primary: #1b1b1b;
+            --text-secondary: #5d5d5d;
+            --text-tertiary: #838383;
+            --text-disabled: #a6a6a6;
+
             --accent-default: #0067c0;
             --accent-hover: #1975c5;
             --accent-active: #2b88d8;
             --accent-text: #ffffff;
 
-            --text-primary: #1b1b1b;
-            --text-secondary: #5d5d5d;
-            --text-placeholder: #8d8d8d;
-            --text-disabled: #a6a6a6;
-
-            --control-fill: #ffffff;
-            --control-fill-secondary: #f9f9f9;
-            --control-stroke: rgba(0, 0, 0, 0.0578);
-            --control-stroke-bottom: rgba(0, 0, 0, 0.3); /* Stronger definition */
+            --control-fill: #ffffff; /* Input background */
+            --control-fill-secondary: #f6f6f6; /* Button background */
+            --control-fill-hover: #f0f0f0;
+            --control-fill-active: #e4e4e4;
             
+            --stroke-card: rgba(0, 0, 0, 0.0578);
+            --stroke-control: rgba(0, 0, 0, 0.0578);
+            --stroke-control-strong: rgba(0, 0, 0, 0.4458); /* Bottom border of inputs */
+
             --focus-stroke: #1a1a1a;
 
             --shadow-flyout: 0 8px 16px rgba(0, 0, 0, 0.14);
             --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.025);
-            
-            --radius-control: 4px;
-            --radius-card: 8px;
-            --radius-window: 12px;
         }
 
         [data-theme="dark"] {
+            /* Dark Theme Tokens */
             --mica-bg: #202020;
-            --layer-card: #2c2c2c;
-            --layer-stroke: rgba(255, 255, 255, 0.0605);
+            --layer-fill: #2c2c2c;
+            --layer-fill-secondary: #323232;
             
+            --text-primary: #ffffff;
+            --text-secondary: #d0d0d0;
+            --text-tertiary: #9d9d9d;
+            --text-disabled: #5c5c5c;
+
             --accent-default: #4cc2ff;
-            --accent-hover: #4cc2ff;
+            --accent-hover: #4cc2ff; /* WinUI lightens accent on hover in dark mode usually, keeping solid for contrast */
             --accent-active: #3aa0d9;
             --accent-text: #000000;
 
-            --text-primary: #ffffff;
-            --text-secondary: #d0d0d0;
-            --text-placeholder: #959595;
-            --text-disabled: #5c5c5c;
+            --control-fill: #333333; /* Text Box */
+            --control-fill-secondary: #3a3a3a; /* Button */
+            --control-fill-hover: #424242;
+            --control-fill-active: #2f2f2f;
 
-            --control-fill: #333333;
-            --control-fill-secondary: #3a3a3a;
-            --control-stroke: rgba(255, 255, 255, 0.07);
-            --control-stroke-bottom: rgba(255, 255, 255, 0.3);
+            --stroke-card: rgba(0, 0, 0, 0.2); /* Invisible mostly, but useful for definition */
+            --stroke-control: rgba(255, 255, 255, 0.0698);
+            --stroke-control-strong: rgba(255, 255, 255, 0.5442);
 
             --focus-stroke: #ffffff;
             
             --shadow-flyout: 0 8px 16px rgba(0, 0, 0, 0.26);
             --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.13);
-        }
-
-        /* 
-         * IMPORTANT: Apply base size to HTML so 'rem' units work correctly.
-         * Now changing --app-base-size scales EVERYTHING.
-         */
-        html {
-            font-size: var(--app-base-size);
         }
 
         * {
@@ -97,9 +91,12 @@
             padding: 0;
         }
 
+        html {
+            font-size: var(--app-base-size);
+        }
+
         body {
-            font-family: 'Segoe UI Variable', 'Segoe UI', 'Pretendard', -apple-system, sans-serif;
-            font-size: 1rem; /* Relative to html size */
+            font-family: var(--font-family);
             background-color: var(--mica-bg);
             color: var(--text-primary);
             height: 100vh;
@@ -108,99 +105,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: background-color 0.3s cubic-bezier(0.2, 0, 0, 1);
+            transition: background-color 0.3s ease;
             user-select: none;
         }
 
-        .container {
-            width: 100%;
-            height: 100%;
-            max-width: none;
-            display: flex;
-            flex-direction: column;
-            background: transparent;
-            padding: 1.5rem 2rem;
-            position: relative;
-        }
-
-        /* Allow text selection inside container but not UI chrome */
-        .container * { user-select: text; }
-        button, label, select, .preset-btn { user-select: none; }
-
-        header {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 1.5rem;
-            position: relative;
-            padding-right: 3rem;
-        }
-
-        h1 {
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-            letter-spacing: -0.015em;
-        }
-
-        p.subtitle {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
-
-        p.subtitle a {
-            color: var(--accent-default);
-            text-decoration: none;
-            padding: 0 2px;
-            border-radius: 2px;
-        }
-        p.subtitle a:hover { text-decoration: underline; background: rgba(0,0,0,0.05); }
-
-        .theme-toggle-btn {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 2.5rem;
-            height: 2.5rem;
-            background: transparent;
-            border: none;
-            border-radius: var(--radius-control);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            color: var(--text-primary);
-            transition: background 0.1s;
-        }
-        .theme-toggle-btn:hover { background-color: rgba(128, 128, 128, 0.1); }
-        .theme-toggle-btn:active { background-color: rgba(128, 128, 128, 0.2); transform: scale(0.97); }
-
-        .layout-wrapper {
-            display: flex;
-            gap: 1.5rem;
-            flex: 1;
-            overflow: hidden;
-            padding-bottom: 0.75rem;
-        }
-
-        .left-panel, .right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            border-radius: var(--radius-card);
-            padding-right: 6px;
-        }
-
-        .right-panel {
-            background: var(--layer-card);
-            border: 1px solid var(--layer-stroke);
-            padding: 1.5rem;
-            box-shadow: var(--shadow-card);
-        }
-
+        /* Custom Scrollbar (Win 11 Style) */
         ::-webkit-scrollbar { width: 10px; height: 10px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb {
@@ -210,12 +119,102 @@
             background-clip: content-box;
             transition: background-color 0.2s;
         }
-        :hover::-webkit-scrollbar-thumb { background-color: rgba(128, 128, 128, 0.5); }
+        :hover::-webkit-scrollbar-thumb { background-color: var(--text-tertiary); }
 
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 0; /* Remove padding to simulate window edge */
+        }
+
+        /* Allow selection */
+        .container * { user-select: text; }
+        button, label, select, .preset-btn { user-select: none; }
+
+        /* Header Area */
+        header {
+            padding: 1.5rem 2rem 1rem 2rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 1.5rem; /* Title Large */
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.015em;
+        }
+
+        p.subtitle {
+            font-size: 0.875rem; /* Body */
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        p.subtitle a {
+            color: var(--accent-default);
+            text-decoration: none;
+            border-radius: 2px;
+        }
+        p.subtitle a:hover { text-decoration: underline; }
+
+        /* Theme Toggle as Command Bar Button */
+        .theme-toggle-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            width: 2.25rem;
+            height: 2.25rem;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: background 0.1s;
+        }
+        .theme-toggle-btn:hover { background-color: rgba(128, 128, 128, 0.1); }
+        .theme-toggle-btn:active { background-color: rgba(128, 128, 128, 0.2); transform: scale(0.96); }
+
+        /* Main Content Layout */
+        .layout-wrapper {
+            display: flex;
+            gap: 16px; /* WinUI standard gap */
+            flex: 1;
+            overflow: hidden;
+            padding: 0 2rem 1rem 2rem;
+        }
+
+        .left-panel, .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            border-radius: var(--radius-layer);
+            /* Padding for scrollbar space */
+            padding-right: 4px; 
+        }
+
+        /* Right Panel mimics a 'Card' or 'Surface' */
+        .right-panel {
+            background: var(--layer-fill);
+            border: 1px solid var(--stroke-card);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-card);
+        }
+
+        /* Preset Buttons (Toggle Button Style) */
         .preset-wrapper { margin-bottom: 1.5rem; }
         .preset-wrapper label {
             display: block;
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 0.5rem;
@@ -224,16 +223,16 @@
         .preset-buttons {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
+            gap: 8px;
         }
 
         .preset-btn {
-            background: var(--layer-card);
-            border: 1px solid var(--layer-stroke);
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            border-radius: var(--radius-card);
-            padding: 0.75rem 0.5rem;
-            font-size: 0.95rem;
+            background: var(--control-fill-secondary);
+            border: 1px solid var(--stroke-control);
+            border-bottom: 1px solid var(--stroke-control);
+            border-radius: var(--radius-control);
+            padding: 0.6rem 0.5rem;
+            font-size: 0.9rem;
             color: var(--text-primary);
             cursor: pointer;
             transition: all 0.1s;
@@ -241,187 +240,188 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 2px;
             position: relative;
         }
-        [data-theme="dark"] .preset-btn { border-bottom: 1px solid var(--layer-stroke); }
+        
+        .preset-btn:hover { background-color: var(--control-fill-hover); }
+        .preset-btn:active { background-color: var(--control-fill-active); transform: scale(0.98); color: var(--text-secondary); }
 
-        .preset-btn:hover { background-color: var(--control-fill-secondary); }
-        .preset-btn:active { background-color: rgba(128,128,128,0.1); transform: scale(0.98); }
-
+        /* Active state mimics WinUI ToggleButton:Checked */
         .preset-btn.active {
-            background-color: var(--layer-card);
-            border-color: var(--accent-default);
-            border-width: 2px;
-            padding: calc(0.75rem - 1px) calc(0.5rem - 1px);
+            background-color: var(--control-fill-secondary); 
+            background-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.02));
+            border-color: var(--stroke-control);
+            /* WinUI Accent Indicator logic */
         }
         .preset-btn.active::after {
             content: '';
             position: absolute;
-            top: 6px; right: 6px;
-            width: 6px; height: 6px;
-            border-radius: 50%;
+            bottom: -1px; left: 12px; right: 12px;
+            height: 3px;
             background-color: var(--accent-default);
+            border-radius: 2px 2px 0 0;
         }
+        [data-theme="dark"] .preset-btn.active { background-color: rgba(255,255,255,0.08); }
 
         .preset-btn span.limit-badge {
-            font-size: 0.5rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
+            font-weight: 400;
         }
 
+        /* Controls Grid */
         .controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 1rem;
+            gap: 16px;
             margin-bottom: 1.5rem;
         }
 
         .input-group { display: flex; flex-direction: column; }
         .input-group label {
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 6px;
             font-weight: 400;
         }
 
+        /* WinUI 3 TextBox & ComboBox Style */
         input[type="number"], 
         input[type="text"],
-        select {
-            height: 2.25rem;
-            background-color: var(--control-fill);
-            border: 1px solid var(--control-stroke);
-            border-bottom: 1px solid var(--control-stroke-bottom);
-            border-radius: var(--radius-control);
-            padding: 0 0.75rem;
-            font-size: 0.95rem;
+        select, textarea {
             font-family: inherit;
+            font-size: 0.875rem;
             color: var(--text-primary);
+            background-color: var(--control-fill);
+            border: 1px solid var(--stroke-control);
+            border-bottom: 1px solid var(--stroke-control-strong);
+            border-radius: var(--radius-control);
             outline: none;
-            transition: all 0.1s;
+            transition: background 0.1s, border-color 0.1s;
         }
 
-        input:hover, select:hover { background-color: var(--control-fill-secondary); }
+        input[type="number"], input[type="text"], select { height: 32px; padding: 0 10px; }
         
-        input:focus, select:focus {
-            border-color: var(--accent-default);
-            border-bottom-color: var(--accent-default);
-            border-bottom-width: 2px;
-            background-color: var(--layer-card);
+        /* WinUI Hover State */
+        input:hover, select:hover, textarea:hover {
+            background-color: var(--control-fill-hover);
+        }
+
+        /* WinUI Focus State (Bottom Accent Bar is simulated via border-bottom) */
+        input:focus, select:focus, textarea:focus {
+            background-color: var(--control-fill);
+            border-bottom: 2px solid var(--accent-default);
+            border-left-color: var(--stroke-control);
+            border-right-color: var(--stroke-control);
+            border-top-color: var(--stroke-control);
         }
 
         select {
             cursor: pointer;
             appearance: none;
+            padding-right: 2rem;
             background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%235D5D5D' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 0.75rem center;
+            background-position: right 10px center;
         }
         [data-theme="dark"] select {
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%23D0D0D0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
         }
 
-        #customFormatInput { margin-top: 0.5rem; display: none; }
+        #customFormatInput { margin-top: 8px; display: none; }
         #customFormatInput.show { display: block; animation: fadeIn 0.2s; }
 
+        /* TextArea - The main input */
         textarea {
             flex: 1;
             width: 100%;
             min-height: 200px;
-            background-color: var(--layer-card);
-            border: 1px solid var(--control-stroke);
-            border-bottom: 1px solid var(--control-stroke-bottom);
-            border-radius: var(--radius-card);
-            padding: 1rem;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: var(--text-primary);
+            padding: 12px;
+            line-height: 1.5;
             resize: none;
-            outline: none;
-            font-family: inherit;
-            transition: border 0.1s;
             margin-bottom: 1rem;
             box-shadow: var(--shadow-card);
         }
         
-        textarea:focus {
-            border-bottom-color: var(--accent-default);
-            border-bottom-width: 2px;
-        }
-
         textarea.drag-over {
             background-color: var(--control-fill-secondary);
             border: 2px dashed var(--accent-default);
         }
 
+        /* Action Area */
         .action-area {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
         }
 
-        .buttons-group { display: flex; gap: 0.5rem; }
+        .buttons-group { display: flex; gap: 8px; }
 
-        .char-count { font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; }
-        #twitterCount, #bskyCount { font-size: 0.8rem; font-weight: 600; margin-top: 2px; }
+        .char-count { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; }
+        #twitterCount, #bskyCount { font-size: 0.75rem; font-weight: 600; margin-top: 4px; }
 
+        /* WinUI Standard Button */
         button {
-            height: 2.25rem;
+            height: 32px;
             border-radius: var(--radius-control);
-            padding: 0 1rem;
-            font-size: 0.95rem;
+            padding: 0 16px;
+            font-size: 0.875rem;
             font-family: inherit;
             cursor: pointer;
             transition: all 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 8px;
+            font-weight: 400;
         }
 
         button.reset-btn, button.file-btn, button.download-btn {
-            background-color: var(--control-fill);
+            background-color: var(--control-fill-secondary);
             color: var(--text-primary);
-            border: 1px solid var(--control-stroke);
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            border: 1px solid var(--stroke-control);
+            border-bottom: 1px solid var(--stroke-control-strong);
         }
-        [data-theme="dark"] button.reset-btn, 
-        [data-theme="dark"] button.file-btn, 
-        [data-theme="dark"] button.download-btn { border-bottom-color: var(--layer-stroke); }
 
         button.reset-btn:hover, button.file-btn:hover, button.download-btn:hover {
-            background-color: var(--control-fill-secondary);
+            background-color: var(--control-fill-hover);
         }
         button.reset-btn:active, button.file-btn:active, button.download-btn:active {
-            background-color: rgba(128,128,128,0.1);
+            background-color: var(--control-fill-active);
             color: var(--text-secondary);
             transform: scale(0.98);
         }
 
+        /* WinUI Accent Button */
         button.split-btn, button.copy-all-btn {
             background-color: var(--accent-default);
             color: var(--accent-text);
-            border: 1px solid transparent;
+            border: 1px solid transparent; /* Accent buttons usually borderless or same color */
+            border-bottom: 1px solid rgba(0,0,0,0.1); 
         }
         
         button.split-btn:hover, button.copy-all-btn:hover { background-color: var(--accent-hover); }
         button.split-btn:active, button.copy-all-btn:active { 
             background-color: var(--accent-active); 
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.8);
             transform: scale(0.98);
         }
 
         .results-header-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: 8px;
             margin-bottom: 1rem;
         }
         .copy-all-btn, .download-btn { flex: 1; }
 
+        /* Result Cards */
         .results {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 12px;
             padding-bottom: 1rem;
         }
         
@@ -430,19 +430,24 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            color: var(--text-placeholder);
-            font-size: 0.95rem;
+            color: var(--text-disabled);
+            font-size: 0.9rem;
             text-align: center;
             min-height: 200px;
         }
 
         .tweet-card {
-            background-color: var(--control-fill-secondary);
-            border: 1px solid var(--control-stroke);
-            border-radius: var(--radius-card);
-            padding: 1rem;
+            background-color: var(--layer-fill-secondary); /* Slight contrast against card bg */
+            border: 1px solid var(--stroke-card);
+            border-radius: var(--radius-layer);
+            padding: 16px;
             position: relative;
             animation: fadeIn 0.3s cubic-bezier(0,0,0,1);
+        }
+        /* Dark mode needs differentiation for nested card */
+        [data-theme="dark"] .tweet-card {
+            background-color: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
         }
         
         .tweet-card.warning { border: 1px solid #fce100; }
@@ -450,32 +455,32 @@
         .mockup-header {
             display: flex;
             align-items: center;
-            margin-bottom: 0.75rem;
-            gap: 0.75rem;
+            margin-bottom: 12px;
+            gap: 12px;
         }
 
         .mockup-avatar {
-            width: 2.25rem; height: 2.25rem;
+            width: 36px; height: 36px;
             border-radius: 50%;
-            background-color: var(--layer-card);
+            background-color: var(--control-fill);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
-            border: 1px solid var(--control-stroke);
+            font-size: 1.2rem;
+            border: 1px solid var(--stroke-control);
         }
 
         .mockup-info { display: flex; flex-direction: column; }
-        .mockup-name { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+        .mockup-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
         .mockup-handle { font-size: 0.8rem; color: var(--text-secondary); }
 
         .card-meta-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--control-stroke);
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--stroke-control);
         }
 
         .badge {
@@ -486,7 +491,7 @@
             font-size: 0.75rem;
             font-weight: 600;
         }
-        [data-theme="dark"] .badge { color: #6ccb5f; }
+        [data-theme="dark"] .badge { color: #6ccb5f; background-color: rgba(108, 203, 95, 0.15); }
         .badge.warn { background-color: rgba(255, 185, 0, 0.15); color: #8a6d0b; }
         [data-theme="dark"] .badge.warn { color: #ffd337; }
 
@@ -495,18 +500,19 @@
             line-height: 1.6;
             white-space: pre-wrap;
             word-break: break-word;
-            margin-bottom: 1rem;
+            margin-bottom: 16px;
             color: var(--text-primary);
         }
 
+        /* Copy Button inside card (Ghost/Subtle Button) */
         .copy-btn {
             width: 100%;
-            height: 2rem;
+            height: 32px;
             background: transparent;
             color: var(--accent-default);
             border: none;
             border-radius: var(--radius-control);
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             font-weight: 600;
         }
         .copy-btn:hover { background-color: rgba(0,0,0,0.04); }
@@ -515,36 +521,37 @@
         .copy-btn.copied { color: #107c10; background-color: rgba(16, 124, 16, 0.1); }
         [data-theme="dark"] .copy-btn.copied { color: #6ccb5f; }
 
+        /* Status Bar (Notepad/VSCode style) */
         .status-bar {
-            background: var(--mica-bg);
-            padding: 0.5rem 1rem;
-            border-top: 1px solid var(--control-stroke);
+            background: var(--mica-bg); /* Match window bg */
+            padding: 4px 2rem;
+            border-top: 1px solid rgba(0,0,0,0.05); /* Very subtle separator */
             font-size: 0.75rem;
             color: var(--text-secondary);
             display: flex;
             justify-content: flex-end;
-            gap: 1.5rem;
-            margin-top: 0;
+            gap: 24px;
             flex-shrink: 0;
+            height: 32px;
+            align-items: center;
         }
 
         .status-item { display: flex; align-items: center; gap: 6px; }
         .status-item span { color: var(--text-primary); }
 
-        footer { display: none; }
-
+        /* Toast (Teaching Tip / Notification style) */
         #toast {
             visibility: hidden;
-            min-width: 320px;
-            background-color: var(--layer-card);
+            min-width: 300px;
+            background-color: var(--layer-fill); /* Acrylic usually, but solid for web */
             color: var(--text-primary);
-            border: 1px solid var(--control-stroke);
-            border-radius: var(--radius-card);
-            padding: 1rem;
+            border: 1px solid var(--stroke-card);
+            border-radius: var(--radius-layer);
+            padding: 12px 16px;
             position: fixed;
             z-index: 999;
             left: 50%;
-            bottom: 40px;
+            bottom: 48px;
             transform: translateX(-50%) translateY(20px);
             font-size: 0.9rem;
             font-weight: 400;
@@ -554,14 +561,15 @@
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            gap: 0.75rem;
+            gap: 12px;
         }
         
+        /* WinUI colored accent bar on left */
         #toast::before {
             content: '';
             position: absolute;
-            left: 4px; top: 50%; transform: translateY(-50%);
-            height: 60%; width: 3px;
+            left: 6px; top: 12px; bottom: 12px;
+            width: 3px;
             background-color: var(--accent-default);
             border-radius: 2px;
         }
@@ -570,7 +578,6 @@
             visibility: visible;
             opacity: 1;
             transform: translateX(-50%) translateY(0);
-            bottom: 60px;
         }
 
         @keyframes fadeIn {
@@ -579,13 +586,12 @@
         }
 
         @media (max-width: 768px) {
-            .container { padding: 1rem; }
-            .layout-wrapper { flex-direction: column; overflow: visible; gap: 1rem; }
+            .layout-wrapper { flex-direction: column; overflow: visible; gap: 1rem; padding: 0 1rem 1rem 1rem; }
             .left-panel, .right-panel { overflow: visible; padding-right: 0; }
             .right-panel { border: none; padding: 0; background: transparent; box-shadow: none; }
-            header { text-align: center; padding-right: 0; }
-            .theme-toggle-btn { position: absolute; right: 0; top: 0; }
-            .status-bar { justify-content: center; flex-wrap: wrap; gap: 10px; border-top: none; }
+            header { padding: 1.5rem 1rem 1rem 1rem; }
+            .theme-toggle-btn { right: 1rem; }
+            .status-bar { justify-content: center; flex-wrap: wrap; gap: 10px; height: auto; padding: 8px; }
         }
     </style>
 </head>
@@ -608,13 +614,13 @@
                     <label>✨ 플랫폼 선택 (자동 설정)</label>
                     <div class="preset-buttons" id="presetContainer">
                         <button id="btn-bluesky" class="preset-btn active" data-preset="bluesky">
-                            🦋 블루스카이 <span class="limit-badge">300자</span>
+                            🦋 블루스카이 (300자)</span>
                         </button>
                         <button id="btn-twitter" class="preset-btn" data-preset="twitter">
-                            🐦 트위터 <span class="limit-badge">280자</span>
+                            🐦 트위터 (280자)</span>
                         </button>
                         <button id="btn-threads" class="preset-btn" data-preset="threads">
-                            🧵 스레드 <span class="limit-badge">500자</span>
+                            🧵 스레드 (500자)</span>
                         </button>
                     </div>
                 </div>
@@ -714,7 +720,7 @@
 
             // 1. 상수 및 설정 관리
             const CONFIG = {
-                VERSION: "타래 재단사 7.0 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 7.1 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
