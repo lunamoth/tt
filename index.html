@@ -237,10 +237,10 @@
             cursor: pointer;
             transition: all 0.1s;
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* Changed to row for single line */
             align-items: center;
             justify-content: center;
-            gap: 2px;
+            gap: 4px; /* Slightly increased gap for row layout */
             position: relative;
         }
         
@@ -265,9 +265,10 @@
         [data-theme="dark"] .preset-btn.active { background-color: rgba(255,255,255,0.08); }
 
         .preset-btn span.limit-badge {
-            font-size: 0.75rem;
+            font-size: 0.8rem; /* Smaller font for numbers */
             color: var(--text-secondary);
             font-weight: 400;
+            margin-top: 1px; /* Visual alignment */
         }
 
         /* Controls Grid */
@@ -614,13 +615,13 @@
                     <label>✨ 플랫폼 선택 (자동 설정)</label>
                     <div class="preset-buttons" id="presetContainer">
                         <button id="btn-bluesky" class="preset-btn active" data-preset="bluesky">
-                            🦋 블루스카이 (300자)</span>
+                            🦋 블루스카이 <span class="limit-badge">(300자)</span>
                         </button>
                         <button id="btn-twitter" class="preset-btn" data-preset="twitter">
-                            🐦 트위터 (280자)</span>
+                            🐦 트위터 <span class="limit-badge">(280자)</span>
                         </button>
                         <button id="btn-threads" class="preset-btn" data-preset="threads">
-                            🧵 스레드 (500자)</span>
+                            🧵 스레드 <span class="limit-badge">(500자)</span>
                         </button>
                     </div>
                 </div>
@@ -720,7 +721,7 @@
 
             // 1. 상수 및 설정 관리
             const CONFIG = {
-                VERSION: "타래 재단사 7.1 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 7.2 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
