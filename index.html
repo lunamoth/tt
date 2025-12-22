@@ -271,6 +271,17 @@
             margin-top: 1px; /* Visual alignment */
         }
 
+        /* Keyboard Hint Style */
+        .kbd-hint {
+            font-size: 0.7em;
+            color: var(--text-tertiary);
+            margin-left: 4px;
+            font-weight: normal;
+            opacity: 0.7;
+            font-family: Consolas, 'Courier New', monospace;
+            display: inline-block;
+        }
+        
         /* Controls Grid */
         .controls {
             display: grid;
@@ -602,7 +613,7 @@
         <header>
             <h1 id="appTitle">✂️ 타래 재단사</h1>
             <p class="subtitle">긴 글을 🔒서버 전송 없이 안전하게 타래로 재단해드려요. (제작: @lunamoth & Gemini 3.0 Pro | <a href="https://github.com/lunamoth/tt" target="_blank" rel="noopener noreferrer">소스 코드</a>)</p>
-            <button class="theme-toggle-btn" id="themeToggle" aria-label="다크 모드 전환">
+            <button class="theme-toggle-btn" id="themeToggle" aria-label="다크 모드 전환" title="다크 모드 전환 (Alt + D)">
                 🌙
             </button>
         </header>
@@ -615,13 +626,13 @@
                     <label>✨ 플랫폼 선택 (자동 설정)</label>
                     <div class="preset-buttons" id="presetContainer">
                         <button id="btn-bluesky" class="preset-btn active" data-preset="bluesky">
-                            🦋 블루스카이 <span class="limit-badge">(300자)</span>
+                            🦋 블루스카이 <span class="limit-badge">(300자)</span> <span class="kbd-hint">Alt+B</span>
                         </button>
                         <button id="btn-twitter" class="preset-btn" data-preset="twitter">
-                            🐦 트위터 <span class="limit-badge">(280자)</span>
+                            🐦 트위터 <span class="limit-badge">(280자)</span> <span class="kbd-hint">Alt+X</span>
                         </button>
                         <button id="btn-threads" class="preset-btn" data-preset="threads">
-                            🧵 스레드 <span class="limit-badge">(500자)</span>
+                            🧵 스레드 <span class="limit-badge">(500자)</span> <span class="kbd-hint">Alt+T</span>
                         </button>
                     </div>
                 </div>
@@ -684,8 +695,8 @@
                     </div>
                     <div class="buttons-group">
                         <input type="file" id="fileInput" hidden accept=".txt,text/plain">
-                        <button class="file-btn" id="btn-file">📂 파일</button>
-                        <button class="reset-btn" id="btn-reset">🔄 초기화</button>
+                        <button class="file-btn" id="btn-file">📂 파일 <span class="kbd-hint">Ctrl+O</span></button>
+                        <button class="reset-btn" id="btn-reset">🔄 초기화 <span class="kbd-hint">Alt+Del</span></button>
                         <button class="split-btn" id="btn-split">자르기 ⚡️ (Ctrl + Enter)</button>
                     </div>
                 </div>
@@ -721,7 +732,7 @@
 
             // 1. 상수 및 설정 관리
             const CONFIG = {
-                VERSION: "타래 재단사 7.2 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 7.3 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1349,9 +1360,78 @@
                     });
 
                     document.addEventListener('keydown', (e) => {
+                        // Global Keyboard Shortcuts
+                        
+                        // Ctrl + Enter: Split
                         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                             e.preventDefault();
                             this.dom.btnSplit.click();
+                            return;
+                        }
+
+                        // Ctrl + Shift + C: Copy All
+                        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
+                            e.preventDefault();
+                            const copyAllBtn = this.dom.resultsArea.querySelector('.copy-all-btn');
+                            if (copyAllBtn) copyAllBtn.click();
+                            return;
+                        }
+
+                        // Ctrl + S: Save/Download
+                        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+                            e.preventDefault();
+                            const downloadBtn = this.dom.resultsArea.querySelector('.download-btn');
+                            if (downloadBtn) downloadBtn.click();
+                            return;
+                        }
+
+                        // Alt + Delete: Reset
+                        if (e.altKey && e.key === 'Delete') {
+                            e.preventDefault();
+                            this.dom.btnReset.click();
+                            return;
+                        }
+
+                        // Ctrl + O: Open File
+                        if ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O')) {
+                            e.preventDefault();
+                            this.dom.btnFile.click();
+                            return;
+                        }
+
+                        // / (Slash): Focus Input
+                        if (e.key === '/' && document.activeElement !== this.dom.inputText && document.activeElement.tagName !== 'INPUT') {
+                            e.preventDefault();
+                            this.dom.inputText.focus();
+                            return;
+                        }
+
+                        // Alt + B: Bluesky
+                        if (e.altKey && (e.key === 'b' || e.key === 'B')) {
+                            e.preventDefault();
+                            this.setPreset('bluesky');
+                            return;
+                        }
+
+                        // Alt + X: Twitter
+                        if (e.altKey && (e.key === 'x' || e.key === 'X')) {
+                            e.preventDefault();
+                            this.setPreset('twitter');
+                            return;
+                        }
+
+                        // Alt + T: Threads
+                        if (e.altKey && (e.key === 't' || e.key === 'T')) {
+                            e.preventDefault();
+                            this.setPreset('threads');
+                            return;
+                        }
+                        
+                        // Alt + D: Dark Mode
+                        if (e.altKey && (e.key === 'd' || e.key === 'D')) {
+                            e.preventDefault();
+                            this.dom.themeToggle.click();
+                            return;
                         }
                     });
                 }
@@ -1518,8 +1598,13 @@
                         frag.appendChild(div);
                     } else {
                         const actionDiv = DOMHelper.createElement('div', 'results-header-actions');
-                        const copyAll = DOMHelper.createElement('button', 'copy-all-btn', CONFIG.MESSAGES.COPY_ALL);
-                        const downloadBtn = DOMHelper.createElement('button', 'download-btn', CONFIG.MESSAGES.SAVE_FILE);
+                        // Added keyboard hints dynamically to these buttons
+                        const copyAll = DOMHelper.createElement('button', 'copy-all-btn');
+                        copyAll.innerHTML = `${CONFIG.MESSAGES.COPY_ALL} <span class="kbd-hint">Ctrl+Shift+C</span>`;
+                        
+                        const downloadBtn = DOMHelper.createElement('button', 'download-btn');
+                        downloadBtn.innerHTML = `${CONFIG.MESSAGES.SAVE_FILE} <span class="kbd-hint">Ctrl+S</span>`;
+                        
                         actionDiv.append(copyAll, downloadBtn);
                         frag.appendChild(actionDiv);
 
