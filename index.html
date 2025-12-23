@@ -654,6 +654,7 @@
                             <option value="bracket">[1/n]</option>
                             <option value="simple">1/n</option>
                             <option value="paren">(1/n)</option>
+                            <option value="link_bottom">링크 하단</option>
                             <option value="custom">직접 입력...</option>
                         </select>
                         <input type="text" id="customFormatInput" placeholder="예: {current}/{total} 페이지">
@@ -978,6 +979,11 @@
                 static format(chunk, options, current, total) {
                     const { position, format, customFormatStr } = options;
                     
+                    if (format === 'link_bottom') {
+                        if (current === 1 && total > 1) return `${chunk}\n\n원문 링크 👇`;
+                        return chunk;
+                    }
+
                     if (format === 'google') {
                         const cleanChunk = chunk.replace(/\s+$/, '');
                         if (current === 1) {
@@ -1023,6 +1029,21 @@
                 }
 
                 static split(text, limit, options) {
+                    if (options.format === 'link_bottom') {
+                        const match = text.match(/(https?:\/\/[^\s]+)/);
+                        if (match) {
+                            const url = match[0];
+                            const title = text.substring(0, match.index).trim();
+                            const body = text.substring(match.index + url.length).trim();
+                            if (title && body) {
+                                return [
+                                    { text: body, isUnbreakable: false },
+                                    { text: title + "\n\n" + url, isUnbreakable: false }
+                                ];
+                            }
+                        }
+                    }
+
                     const { urlMode, paragraphMode } = options;
                     const safeDivisor = Math.max(1, limit - 10);
                     let estimatedTotal = Math.ceil(this.getLength(text, urlMode) / safeDivisor) || 1;
@@ -1476,16 +1497,19 @@
                     }
                 }
 
-                setPreset(platform) {
+				setPreset(platform) {
                     if (platform === 'bluesky') {
                         this.dom.limitInput.value = CONFIG.LIMITS.BLUESKY;
                         this.dom.urlModeSelect.value = 'bluesky';
+                        this.dom.numberFormatSelect.value = 'thread';
                     } else if (platform === 'twitter') {
                         this.dom.limitInput.value = CONFIG.LIMITS.TWITTER;
                         this.dom.urlModeSelect.value = 'twitter';
+                        this.dom.numberFormatSelect.value = 'link_bottom';
                     } else if (platform === 'threads') {
                         this.dom.limitInput.value = CONFIG.LIMITS.THREADS;
                         this.dom.urlModeSelect.value = 'off';
+                        this.dom.numberFormatSelect.value = 'thread';
                     }
                     
                     this.syncSettingsFromDOM();
