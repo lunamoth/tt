@@ -1,1701 +1,834 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="light">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data:;">
-    <title>✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기</title>
+    <title>💪 다이어트 챌린지 2026 (Ver 3.0.46)</title>
     
-    <!-- Pretendard Font for non-Windows platforms to maintain clean look -->
-    <link rel="stylesheet" as="style" crossorigin href="https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.8/static/pretendard.css" />
+    <!-- 필수 라이브러리: Chart.js 및 Date Adapter (defer 추가로 로딩 최적화) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns" defer></script>
 
     <style>
-        /* 
-         * Windows 11 Fluent Design System (WinUI 3) Implementation 
-         */
-
         :root {
-            /* Typography */
-            --font-family: 'Segoe UI Variable', 'Segoe UI', 'Pretendard', -apple-system, sans-serif;
+            /* 라이트 모드 (기본) */
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --secondary: #2196F3;
+            --secondary-dark: #1976D2;
+            --accent: #FF9800;
+            --danger: #F44336;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-light: #757575;
+            --input-border: #e0e0e0;
             
-            /* Sizing */
-            --app-base-size: 18px;
-            --radius-control: 4px;
-            --radius-layer: 8px;
-            --radius-window: 12px;
-
-            /* Light Theme Tokens (WinUI 3 Default) */
-            --mica-bg: #f3f3f3; /* Mica Alt */
-            --layer-fill: #ffffff;
-            --layer-fill-secondary: #f9f9f9;
+            /* 히트맵 색상 */
+            --heatmap-empty: #ebedf0;
+            --heatmap-1: #9be9a8; /* 약한 감량 */
+            --heatmap-2: #40c463;
+            --heatmap-3: #30a14e;
+            --heatmap-4: #216e39; /* 강한 감량 */
+            --heatmap-gain: #ffcdd2; /* 증량 */
             
-            --text-primary: #1b1b1b;
-            --text-secondary: #5d5d5d;
-            --text-tertiary: #838383;
-            --text-disabled: #a6a6a6;
-
-            --accent-default: #0067c0;
-            --accent-hover: #1975c5;
-            --accent-active: #2b88d8;
-            --accent-text: #ffffff;
-
-            --control-fill: #ffffff; /* Input background */
-            --control-fill-secondary: #f6f6f6; /* Button background */
-            --control-fill-hover: #f0f0f0;
-            --control-fill-active: #e4e4e4;
-            
-            --stroke-card: rgba(0, 0, 0, 0.0578);
-            --stroke-control: rgba(0, 0, 0, 0.0578);
-            --stroke-control-strong: rgba(0, 0, 0, 0.4458); /* Bottom border of inputs */
-
-            --focus-stroke: #1a1a1a;
-
-            --shadow-flyout: 0 8px 16px rgba(0, 0, 0, 0.14);
-            --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.025);
+            /* 차트용 변수 (JS에서 참조) */
+            --chart-grid: #eeeeee;
+            --chart-text: #666666;
         }
 
-        [data-theme="dark"] {
-            /* Dark Theme Tokens */
-            --mica-bg: #202020;
-            --layer-fill: #2c2c2c;
-            --layer-fill-secondary: #323232;
+        /* 다크 모드 변수 정의 */
+        body.dark-mode {
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --text: #e0e0e0;
+            --text-light: #a0a0a0;
+            --input-border: #333333;
+            --heatmap-empty: #2d333b;
+            --heatmap-1: #0e4429; 
+            --heatmap-2: #006d32;
+            --heatmap-3: #26a641;
+            --heatmap-4: #39d353;
+            --heatmap-gain: #5c1818; 
             
-            --text-primary: #ffffff;
-            --text-secondary: #d0d0d0;
-            --text-tertiary: #9d9d9d;
-            --text-disabled: #5c5c5c;
-
-            --accent-default: #4cc2ff;
-            --accent-hover: #4cc2ff; /* WinUI lightens accent on hover in dark mode usually, keeping solid for contrast */
-            --accent-active: #3aa0d9;
-            --accent-text: #000000;
-
-            --control-fill: #333333; /* Text Box */
-            --control-fill-secondary: #3a3a3a; /* Button */
-            --control-fill-hover: #424242;
-            --control-fill-active: #2f2f2f;
-
-            --stroke-card: rgba(0, 0, 0, 0.2); /* Invisible mostly, but useful for definition */
-            --stroke-control: rgba(255, 255, 255, 0.0698);
-            --stroke-control-strong: rgba(255, 255, 255, 0.5442);
-
-            --focus-stroke: #ffffff;
-            
-            --shadow-flyout: 0 8px 16px rgba(0, 0, 0, 0.26);
-            --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.13);
+            --chart-grid: #444444;
+            --chart-text: #aaaaaa;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html {
-            font-size: var(--app-base-size);
-        }
-
+        /* 공통 유틸리티 */
+        .flex-center { display: flex; justify-content: center; align-items: center; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
         body {
-            font-family: var(--font-family);
-            background-color: var(--mica-bg);
-            color: var(--text-primary);
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background-color 0.3s ease;
-            user-select: none;
-        }
-
-        /* Custom Scrollbar (Win 11 Style) */
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb {
-            background-color: transparent;
-            border-radius: 10px;
-            border: 4px solid transparent;
-            background-clip: content-box;
-            transition: background-color 0.2s;
-        }
-        :hover::-webkit-scrollbar-thumb { background-color: var(--text-tertiary); }
-
-        .container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            padding: 0; /* Remove padding to simulate window edge */
-        }
-
-        /* Allow selection */
-        .container * { user-select: text; }
-        button, label, select, .preset-btn { user-select: none; }
-
-        /* Header Area */
-        header {
-            padding: 1.5rem 2rem 1rem 2rem;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        h1 {
-            font-size: 1.5rem; /* Title Large */
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-            letter-spacing: -0.015em;
-        }
-
-        p.subtitle {
-            font-size: 0.875rem; /* Body */
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
-
-        p.subtitle a {
-            color: var(--accent-default);
-            text-decoration: none;
-            border-radius: 2px;
-        }
-        p.subtitle a:hover { text-decoration: underline; }
-
-        /* Theme Toggle as Command Bar Button */
-        .theme-toggle-btn {
-            position: absolute;
-            top: 1.5rem;
-            right: 2rem;
-            width: 2.25rem;
-            height: 2.25rem;
-            background: transparent;
-            border: none;
-            border-radius: var(--radius-control);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            color: var(--text-primary);
-            transition: background 0.1s;
-        }
-        .theme-toggle-btn:hover { background-color: rgba(128, 128, 128, 0.1); }
-        .theme-toggle-btn:active { background-color: rgba(128, 128, 128, 0.2); transform: scale(0.96); }
-
-        /* Main Content Layout */
-        .layout-wrapper {
-            display: flex;
-            gap: 16px; /* WinUI standard gap */
-            flex: 1;
-            overflow: hidden;
-            padding: 0 2rem 1rem 2rem;
-        }
-
-        .left-panel, .right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            border-radius: var(--radius-layer);
-            /* Padding for scrollbar space */
-            padding-right: 4px; 
-        }
-
-        /* Right Panel mimics a 'Card' or 'Surface' */
-        .right-panel {
-            background: var(--layer-fill);
-            border: 1px solid var(--stroke-card);
-            padding: 1.5rem;
-            box-shadow: var(--shadow-card);
-        }
-
-        /* Preset Buttons (Toggle Button Style) */
-        .preset-wrapper { margin-bottom: 1.5rem; }
-        .preset-wrapper label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .preset-buttons {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-
-        .preset-btn {
-            background: var(--control-fill-secondary);
-            border: 1px solid var(--stroke-control);
-            border-bottom: 1px solid var(--stroke-control);
-            border-radius: var(--radius-control);
-            padding: 0.6rem 0.5rem;
-            font-size: 0.9rem;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.1s;
-            display: flex;
-            flex-direction: row; /* Changed to row for single line */
-            align-items: center;
-            justify-content: center;
-            gap: 4px; /* Slightly increased gap for row layout */
-            position: relative;
-        }
-        
-        .preset-btn:hover { background-color: var(--control-fill-hover); }
-        .preset-btn:active { background-color: var(--control-fill-active); transform: scale(0.98); color: var(--text-secondary); }
-
-        /* Active state mimics WinUI ToggleButton:Checked */
-        .preset-btn.active {
-            background-color: var(--control-fill-secondary); 
-            background-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.02));
-            border-color: var(--stroke-control);
-            /* WinUI Accent Indicator logic */
-        }
-        .preset-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px; left: 12px; right: 12px;
-            height: 3px;
-            background-color: var(--accent-default);
-            border-radius: 2px 2px 0 0;
-        }
-        [data-theme="dark"] .preset-btn.active { background-color: rgba(255,255,255,0.08); }
-
-        .preset-btn span.limit-badge {
-            font-size: 0.8rem; /* Smaller font for numbers */
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-top: 1px; /* Visual alignment */
-        }
-
-        /* Keyboard Hint Style */
-        .kbd-hint {
-            font-size: 0.7em;
-            color: var(--text-tertiary);
-            margin-left: 4px;
-            font-weight: normal;
-            opacity: 0.7;
-            font-family: Consolas, 'Courier New', monospace;
-            display: inline-block;
-        }
-        
-        /* Controls Grid */
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
-            margin-bottom: 1.5rem;
-        }
-
-        .input-group { display: flex; flex-direction: column; }
-        .input-group label {
-            font-size: 0.875rem;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-            font-weight: 400;
-        }
-
-        /* WinUI 3 TextBox & ComboBox Style */
-        input[type="number"], 
-        input[type="text"],
-        select, textarea {
-            font-family: inherit;
-            font-size: 0.875rem;
-            color: var(--text-primary);
-            background-color: var(--control-fill);
-            border: 1px solid var(--stroke-control);
-            border-bottom: 1px solid var(--stroke-control-strong);
-            border-radius: var(--radius-control);
-            outline: none;
-            transition: background 0.1s, border-color 0.1s;
-        }
-
-        input[type="number"], input[type="text"], select { height: 32px; padding: 0 10px; }
-        
-        /* WinUI Hover State */
-        input:hover, select:hover, textarea:hover {
-            background-color: var(--control-fill-hover);
-        }
-
-        /* WinUI Focus State (Bottom Accent Bar is simulated via border-bottom) */
-        input:focus, select:focus, textarea:focus {
-            background-color: var(--control-fill);
-            border-bottom: 2px solid var(--accent-default);
-            border-left-color: var(--stroke-control);
-            border-right-color: var(--stroke-control);
-            border-top-color: var(--stroke-control);
-        }
-
-        select {
-            cursor: pointer;
-            appearance: none;
-            padding-right: 2rem;
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%235D5D5D' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-        }
-        [data-theme="dark"] select {
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-        }
-
-        #customFormatInput { margin-top: 8px; display: none; }
-        #customFormatInput.show { display: block; animation: fadeIn 0.2s; }
-
-        /* TextArea - The main input */
-        textarea {
-            flex: 1;
-            width: 100%;
-            min-height: 200px;
-            padding: 12px;
-            line-height: 1.5;
-            resize: none;
-            margin-bottom: 1rem;
-            box-shadow: var(--shadow-card);
-        }
-        
-        textarea.drag-over {
-            background-color: var(--control-fill-secondary);
-            border: 2px dashed var(--accent-default);
-        }
-
-        /* Action Area */
-        .action-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.5rem;
-        }
-
-        .buttons-group { display: flex; gap: 8px; }
-
-        .char-count { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; }
-        #twitterCount, #bskyCount { font-size: 0.75rem; font-weight: 600; margin-top: 4px; }
-
-        /* WinUI Standard Button */
-        button {
-            height: 32px;
-            border-radius: var(--radius-control);
-            padding: 0 16px;
-            font-size: 0.875rem;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-weight: 400;
-        }
-
-        button.reset-btn, button.file-btn, button.download-btn {
-            background-color: var(--control-fill-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--stroke-control);
-            border-bottom: 1px solid var(--stroke-control-strong);
-        }
-
-        button.reset-btn:hover, button.file-btn:hover, button.download-btn:hover {
-            background-color: var(--control-fill-hover);
-        }
-        button.reset-btn:active, button.file-btn:active, button.download-btn:active {
-            background-color: var(--control-fill-active);
-            color: var(--text-secondary);
-            transform: scale(0.98);
-        }
-
-        /* WinUI Accent Button */
-        button.split-btn, button.copy-all-btn {
-            background-color: var(--accent-default);
-            color: var(--accent-text);
-            border: 1px solid transparent; /* Accent buttons usually borderless or same color */
-            border-bottom: 1px solid rgba(0,0,0,0.1); 
-        }
-        
-        button.split-btn:hover, button.copy-all-btn:hover { background-color: var(--accent-hover); }
-        button.split-btn:active, button.copy-all-btn:active { 
-            background-color: var(--accent-active); 
-            color: rgba(255,255,255,0.8);
-            transform: scale(0.98);
-        }
-
-        .results-header-actions {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 1rem;
-        }
-        .copy-all-btn, .download-btn { flex: 1; }
-
-        /* Result Cards */
-        .results {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding-bottom: 1rem;
-        }
-        
-        .empty-state {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-disabled);
-            font-size: 0.9rem;
-            text-align: center;
-            min-height: 200px;
-        }
-
-        .tweet-card {
-            background-color: var(--layer-fill-secondary); /* Slight contrast against card bg */
-            border: 1px solid var(--stroke-card);
-            border-radius: var(--radius-layer);
-            padding: 16px;
-            position: relative;
-            animation: fadeIn 0.3s cubic-bezier(0,0,0,1);
-        }
-        /* Dark mode needs differentiation for nested card */
-        [data-theme="dark"] .tweet-card {
-            background-color: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        .tweet-card.warning { border: 1px solid #fce100; }
-
-        .mockup-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-            gap: 12px;
-        }
-
-        .mockup-avatar {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            background-color: var(--control-fill);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            border: 1px solid var(--stroke-control);
-        }
-
-        .mockup-info { display: flex; flex-direction: column; }
-        .mockup-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
-        .mockup-handle { font-size: 0.8rem; color: var(--text-secondary); }
-
-        .card-meta-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--stroke-control);
-        }
-
-        .badge {
-            background-color: rgba(16, 124, 16, 0.1);
-            color: #107c10;
-            padding: 2px 8px;
-            border-radius: var(--radius-control);
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        [data-theme="dark"] .badge { color: #6ccb5f; background-color: rgba(108, 203, 95, 0.15); }
-        .badge.warn { background-color: rgba(255, 185, 0, 0.15); color: #8a6d0b; }
-        [data-theme="dark"] .badge.warn { color: #ffd337; }
-
-        .card-content {
-            font-size: 0.95rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
             line-height: 1.6;
-            white-space: pre-wrap;
-            word-break: break-word;
-            margin-bottom: 16px;
-            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* Copy Button inside card (Ghost/Subtle Button) */
-        .copy-btn {
-            width: 100%;
-            height: 32px;
-            background: transparent;
-            color: var(--accent-default);
-            border: none;
-            border-radius: var(--radius-control);
-            font-size: 0.875rem;
-            font-weight: 600;
+        .container { max-width: 900px; margin: 0 auto; }
+
+        /* 헤더 */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 30px;
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            transition: background 0.3s;
         }
-        .copy-btn:hover { background-color: rgba(0,0,0,0.04); }
-        [data-theme="dark"] .copy-btn:hover { background-color: rgba(255,255,255,0.04); }
+        body.dark-mode header {
+            background: linear-gradient(135deg, #2e7d32, #1565c0);
+        }
+
+        h1 { margin: 0; font-size: 2.2rem; }
+        .subtitle { opacity: 0.9; margin-top: 5px; font-size: 1rem; }
         
-        .copy-btn.copied { color: #107c10; background-color: rgba(16, 124, 16, 0.1); }
-        [data-theme="dark"] .copy-btn.copied { color: #6ccb5f; }
-
-        /* Status Bar (Notepad/VSCode style) */
-        .status-bar {
-            background: var(--mica-bg); /* Match window bg */
-            padding: 4px 2rem;
-            border-top: 1px solid rgba(0,0,0,0.05); /* Very subtle separator */
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            display: flex;
-            justify-content: flex-end;
-            gap: 24px;
-            flex-shrink: 0;
-            height: 32px;
-            align-items: center;
+        .theme-toggle {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            padding: 5px 10px; border-radius: 15px; cursor: pointer; font-size: 0.8rem;
         }
 
-        .status-item { display: flex; align-items: center; gap: 6px; }
-        .status-item span { color: var(--text-primary); }
+        /* 카드 공통 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s, background-color 0.3s;
+        }
+        .card h3 { 
+            margin-top: 0; border-bottom: 2px solid #f0f0f0; 
+            padding-bottom: 10px; margin-bottom: 15px; font-size: 1.2rem; 
+            display: flex; justify-content: space-between; align-items: center; 
+            color: var(--text); 
+        }
+        body.dark-mode .card h3 { border-bottom-color: #333; }
 
-        /* Toast (Teaching Tip / Notification style) */
-        #toast {
-            visibility: hidden;
-            min-width: 300px;
-            background-color: var(--layer-fill); /* Acrylic usually, but solid for web */
-            color: var(--text-primary);
-            border: 1px solid var(--stroke-card);
-            border-radius: var(--radius-layer);
-            padding: 12px 16px;
-            position: fixed;
-            z-index: 999;
-            left: 50%;
-            bottom: 48px;
-            transform: translateX(-50%) translateY(20px);
-            font-size: 0.9rem;
-            font-weight: 400;
-            box-shadow: var(--shadow-flyout);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0,0,0,1);
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 12px;
+        /* 입력 폼 */
+        .input-group { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+        .input-wrapper { flex: 1; min-width: 100px; }
+        label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: 5px; font-weight: bold; }
+        input, select { 
+            width: 100%; padding: 10px; border: 2px solid var(--input-border); 
+            border-radius: 10px; font-size: 1rem; box-sizing: border-box; 
+            outline: none; background: var(--card-bg); color: var(--text); 
+        }
+        input:focus { border-color: var(--primary); }
+        
+        button.add-btn {
+            background-color: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: 10px;
+            font-size: 1rem; cursor: pointer; font-weight: bold; min-width: 100px; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.3);
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button.add-btn.editing-mode {
+            background-color: var(--accent);
+            box-shadow: 0 4px 6px rgba(255, 152, 0, 0.3);
+        }
+        button.add-btn:active { transform: scale(0.98); }
+
+        /* 설정 패널 */
+        .settings-toggle { text-align: right; margin-bottom: 10px; cursor: pointer; color: var(--text-light); font-size: 0.9rem; }
+        #settingsPanel { display: none; background: #fafafa; border: 1px dashed #ccc; }
+        body.dark-mode #settingsPanel { background: #151515; border-color: #444; }
+        .danger-zone { border: 1px solid var(--danger); background: #fff5f5; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        body.dark-mode .danger-zone { background: #2a1c1c; }
+
+        /* 프로그레스 바 */
+        .progress-card { position: relative; padding: 25px 20px; }
+        .progress-track {
+            background: #e0e0e0; height: 10px; border-radius: 5px; position: relative;
+            margin: 40px 15px 50px 15px; 
+        }
+        body.dark-mode .progress-track { background: #333; }
+        .progress-fill {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            height: 100%; border-radius: 5px; width: 0%; transition: width 0.5s ease-out;
+            position: absolute; top: 0; right: 0;
+        }
+        .progress-marker {
+            position: absolute; top: 50%; transform: translate(-50%, -50%);
+            width: 14px; height: 14px; background: white; border: 3px solid #ccc; border-radius: 50%; z-index: 2;
+        }
+        .progress-marker.start { left: 100%; border-color: var(--text-light); }
+        .progress-marker.goal { left: 0%; border-color: var(--secondary); }
+        
+        .progress-indicator-emoji {
+            position: absolute; top: -35px; transform: translateX(50%);
+            font-size: 1.8rem; transition: right 0.5s ease-out; z-index: 3;
+        }
+        .progress-info-text {
+            position: absolute; top: 20px; transform: translateX(50%);
+            font-size: 0.8rem; color: var(--text); background: rgba(255,255,255,0.95);
+            padding: 4px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            white-space: nowrap; text-align: center; border: 1px solid #eee; transition: right 0.5s ease-out; z-index: 3;
+        }
+        body.dark-mode .progress-info-text { background: #333; color: #fff; border-color: #444; }
+        .progress-labels { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-light); font-weight: bold; margin-top: -35px; padding: 0 10px; }
+
+        /* 대시보드 그리드 */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: var(--card-bg); padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stat-icon { font-size: 1.8rem; margin-bottom: 5px; display: block; }
+        .stat-value { font-size: 1.4rem; font-weight: bold; color: var(--text); }
+        .stat-label { font-size: 0.8rem; color: var(--text-light); }
+        .stat-sub { font-size: 0.75rem; color: var(--secondary); margin-top: 2px; }
+
+        /* 텍스트 리포트 */
+        .text-report { background: #e3f2fd; color: #0d47a1; padding: 12px 18px; border-radius: 10px; font-size: 0.95rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        body.dark-mode .text-report { background: #1a2a3a; color: #64b5f6; }
+        
+        /* 상세 분석 그리드 */
+        .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        
+        /* 테이블 & Sticky Header */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; position: relative; }
+        .data-table th, .data-table td { padding: 10px; text-align: center; border-bottom: 1px solid #eee; color: var(--text); }
+        body.dark-mode .data-table th, body.dark-mode .data-table td { border-bottom-color: #333; }
+        .data-table th { 
+            background-color: #f9f9f9; color: var(--text-light); font-weight: 600; 
+            position: sticky; top: 0; z-index: 1; /* Sticky Header */
+        }
+        body.dark-mode .data-table th { background-color: #1f1f1f; }
+        .data-table td.pos { color: var(--danger); font-weight: bold; } /* 증량 */
+        .data-table td.neg { color: var(--primary); font-weight: bold; } /* 감량 */
+        
+        /* 히트맵 */
+        .heatmap-container { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; padding: 10px 0; max-width: 100%; }
+        .heatmap-cell { width: 12px; height: 12px; border-radius: 2px; background-color: var(--heatmap-empty); cursor: pointer; position: relative; }
+        /* 스타일 분리 요청 반영: JS 연동을 위한 히트맵 클래스 추가 */
+        .heatmap-cell.level-gain { background-color: var(--heatmap-gain); }
+        .heatmap-cell.level-1 { background-color: var(--heatmap-1); }
+        .heatmap-cell.level-2 { background-color: var(--heatmap-2); }
+        .heatmap-cell.level-3 { background-color: var(--heatmap-3); }
+        .heatmap-cell.level-4 { background-color: var(--heatmap-4); }
+        
+        .heatmap-legend { display: flex; justify-content: flex-end; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-light); margin-top: 5px; }
+        .legend-box { width: 10px; height: 10px; border-radius: 2px; }
+
+        /* 차트 컨테이너 */
+        .mini-chart-container { height: 200px; width: 100%; position: relative; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+
+        /* 필터 */
+        .filter-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        .filter-group { display: flex; gap: 5px; }
+        .filter-btn { background: #f0f0f0; border: none; padding: 6px 12px; border-radius: 15px; font-size: 0.85rem; cursor: pointer; color: var(--text-light); }
+        body.dark-mode .filter-btn { background: #333; color: #888; }
+        .filter-btn.active { background: var(--secondary); color: white; font-weight: bold; }
+        .date-range-picker { display: flex; gap: 5px; align-items: center; font-size: 0.85rem; color: var(--text); }
+
+        /* 뱃지 시스템 */
+        .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; text-align: center; }
+        .badge-item { background: #fafafa; padding: 10px; border-radius: 10px; border: 1px solid #eee; opacity: 0.4; filter: grayscale(1); transition: all 0.3s; cursor: help; }
+        body.dark-mode .badge-item { background: #222; border-color: #333; }
+        .badge-item.unlocked { opacity: 1; filter: grayscale(0); border-color: var(--accent); background: #fff8e1; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        body.dark-mode .badge-item.unlocked { background: #3e2723; }
+        .badge-icon { font-size: 2rem; display: block; margin-bottom: 5px; }
+        .badge-name { font-size: 0.75rem; font-weight: bold; color: var(--text); }
+
+        /* 캘린더 뷰 */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; font-size: 0.75rem; margin-top: 10px; }
+        .calendar-header { display: flex; justify-content: center; align-items: center; gap: 15px; font-weight: bold; color: var(--text-light); padding-bottom: 10px; }
+        .calendar-header button { background: var(--secondary); color: white; border: none; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+        .calendar-header select { padding: 4px; font-size: 0.8rem; width: auto; }
+        .calendar-cell { 
+            background: var(--card-bg); border: 1px solid var(--input-border); 
+            border-radius: 4px; padding: 6px 2px; text-align: center; min-height: 40px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .calendar-cell.gain { background-color: rgba(244, 67, 54, 0.1); border-color: var(--danger); }
+        .calendar-cell.loss { background-color: rgba(33, 150, 243, 0.1); border-color: var(--secondary); }
+        .calendar-date { font-weight: bold; margin-bottom: 2px; }
+        .calendar-val { font-size: 0.7rem; color: var(--text-light); }
+
+        /* 고급 분석 텍스트 */
+        .insight-list { list-style: none; padding: 0; margin: 0; }
+        .insight-item { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        body.dark-mode .insight-item { border-bottom-color: #333; }
+        .insight-item:last-child { border-bottom: none; }
+        .insight-label { font-weight: bold; margin-right: 5px; color: var(--secondary); }
+
+        /* 토스트 메시지 */
+        .toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
+        .toast {
+            background: rgba(40, 40, 40, 0.9); color: white; padding: 12px 24px; 
+            border-radius: 25px; margin-top: 10px; text-align: center; font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: fadeIn 0.3s ease-out, fadeOut 0.3s ease-in 2.7s forwards;
+            pointer-events: auto;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+        /* 모바일 대응 */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.6rem; }
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+            .filter-row { flex-direction: column; align-items: flex-start; }
+            .input-group { flex-direction: column; }
+            .input-wrapper, button.add-btn { width: 100%; }
+        }
+
+        /* 차트 확대 기능 */
+        .expand-btn {
+            cursor: pointer; font-size: 1.2rem; color: var(--text-light);
+            transition: color 0.2s, transform 0.2s; background: none; border: none; padding: 0 5px;
+        }
+        .expand-btn:hover { color: var(--primary); transform: scale(1.1); }
+
+        .chart-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 9998; display: none; backdrop-filter: blur(2px);
+        }
+        .chart-backdrop.active { display: block; }
+
+        .card.expanded-card {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90vw; height: 90vh; max-width: none; max-height: none;
+            z-index: 9999; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden; border: 1px solid var(--primary);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--card-bg); display: flex; flex-direction: column;
         }
         
-        /* WinUI colored accent bar on left */
-        #toast::before {
-            content: '';
-            position: absolute;
-            left: 6px; top: 12px; bottom: 12px;
-            width: 3px;
-            background-color: var(--accent-default);
-            border-radius: 2px;
+        .card.expanded-card .mini-chart-container,
+        .card.expanded-card .chart-container { flex: 1; height: auto; width: 100%; transition: none; }
+		
+        @keyframes popIn {
+            from { opacity: 0; transform: translate(-50%, -40%) scale(0.95); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        @media (max-width: 600px) {
+            .card.expanded-card { width: 95vw; height: 80vh; }
         }
 
-        #toast.show {
-            visibility: visible;
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-            .layout-wrapper { flex-direction: column; overflow: visible; gap: 1rem; padding: 0 1rem 1rem 1rem; }
-            .left-panel, .right-panel { overflow: visible; padding-right: 0; }
-            .right-panel { border: none; padding: 0; background: transparent; box-shadow: none; }
-            header { padding: 1.5rem 1rem 1rem 1rem; }
-            .theme-toggle-btn { right: 1rem; }
-            .status-bar { justify-content: center; flex-wrap: wrap; gap: 10px; height: auto; padding: 8px; }
-        }
+    .expanded-card .gauge-container { height: 70% !important; align-items: center !important; }
+    .expanded-card .gauge-wrapper { max-width: 45% !important; }
+	
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1 id="appTitle">✂️ 타래 재단사</h1>
-            <p class="subtitle">긴 글을 🔒서버 전송 없이 안전하게 타래로 재단해드려요. (제작: @lunamoth & Gemini 3.0 Pro | <a href="https://github.com/lunamoth/tt" target="_blank" rel="noopener noreferrer">소스 코드</a>)</p>
-            <button class="theme-toggle-btn" id="themeToggle" aria-label="다크 모드 전환" title="다크 모드 전환 (Alt + D)">
-                🌙
-            </button>
-        </header>
+<div class="container">
+    <header>
+        <button class="theme-toggle" onclick="App.toggleDarkMode()">🌓 다크모드</button>
+        <div style="font-size: 3rem; margin-bottom: 10px;">🏃‍♂️🥗💧</div>
+        <h1>다이어트 챌린지 2026</h1>
+        <div class="subtitle">데이터 기반 체중 관리 시스템</div>
+    </header>
 
-        <div class="layout-wrapper">
-            <!-- 왼쪽 패널: 입력 및 설정 -->
-            <div class="left-panel">
-                
-                <div class="preset-wrapper">
-                    <label>✨ 플랫폼 선택 (자동 설정)</label>
-                    <div class="preset-buttons" id="presetContainer">
-                        <button id="btn-bluesky" class="preset-btn active" data-preset="bluesky">
-                            🦋 블루스카이 <span class="limit-badge">(300자)</span> <span class="kbd-hint">Alt+B</span>
-                        </button>
-                        <button id="btn-twitter" class="preset-btn" data-preset="twitter">
-                            🐦 트위터 <span class="limit-badge">(280자)</span> <span class="kbd-hint">Alt+X</span>
-                        </button>
-                        <button id="btn-threads" class="preset-btn" data-preset="threads">
-                            🧵 스레드 <span class="limit-badge">(500자)</span> <span class="kbd-hint">Alt+T</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="controls" id="controlsContainer">
-                    <div class="input-group">
-                        <label for="limit">📏 제한 글자수</label>
-                        <input type="number" id="limit" value="300" min="10" max="2000">
-                    </div>
-
-                    <div class="input-group">
-                        <label for="numberFormat">🔢 번호 서식</label>
-                        <select id="numberFormat">
-                            <option value="thread" selected>(🧵1/n)</option>
-                            <option value="memo">(📝1/n)</option>
-                            <option value="finger">(👇1/n)</option>
-                            <option value="google">구글 트위터 방식</option>
-                            <option value="korean_cont">(위에서 이어짐) (계속)</option>
-                            <option value="bracket">[1/n]</option>
-                            <option value="simple">1/n</option>
-                            <option value="paren">(1/n)</option>
-                            <option value="link_bottom">링크 하단</option>
-                            <option value="custom">직접 입력...</option>
-                        </select>
-                        <input type="text" id="customFormatInput" placeholder="예: {current}/{total} 페이지">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="position">📍 번호 위치</label>
-                        <select id="position">
-                            <option value="front">글 앞 (🧵1/n)</option>
-                            <option value="back" selected>글 뒤 (🧵1/n)</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="paragraphMode">📄 문단 유지</label>
-                        <select id="paragraphMode">
-                            <option value="on" selected>켜기 (기본)</option>
-                            <option value="off">끄기 (꽉 채우기)</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="urlMode">🔗 URL 단축</label>
-                        <select id="urlMode">
-                            <option value="off" selected>사용 안 함</option>
-                            <option value="twitter">23자로 계산 (t.co)</option>
-                            <option value="bluesky">스마트 단축 (Bluesky)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <textarea id="inputText" maxlength="50000" placeholder="여기에 긴 글을 붙여넣거나 .txt 파일을 드래그하세요... 📝&#10;나머지는 제가 알아서 할게요!"></textarea>
-
-                <div class="action-area">
-                    <div style="display: flex; flex-direction: column; gap: 2px;">
-                        <div class="char-count" id="totalCount">현재: 0자</div>
-                        <div id="twitterCount" style="color: #1d9bf0; display: none;">🐦 트위터: 0자</div>
-                        <div id="bskyCount" style="color: #0085ff; display: none;">🦋 블루스카이: 0자</div>
-                    </div>
-                    <div class="buttons-group">
-                        <input type="file" id="fileInput" hidden accept=".txt,text/plain">
-                        <button class="file-btn" id="btn-file">📂 파일 <span class="kbd-hint">Ctrl+O</span></button>
-                        <button class="reset-btn" id="btn-reset">🔄 초기화 <span class="kbd-hint">Alt+Del</span></button>
-                        <button class="split-btn" id="btn-split">자르기 ⚡️ (Ctrl + Enter)</button>
-                    </div>
-                </div>
+    <!-- 설정 영역 -->
+    <div class="settings-toggle" onclick="App.toggleSettings()">⚙️ 키, 시작 체중, 목표 체중 설정 / 백업 / 초기화</div>
+    <div class="card" id="settingsPanel">
+        <h4 style="margin-top:0;">기본 설정</h4>
+        <div class="input-group" style="margin-bottom: 20px;">
+            <div class="input-wrapper">
+                <label>📏 키 (cm)</label>
+                <input type="number" id="userHeight" value="179" inputmode="decimal">
             </div>
-
-            <!-- 오른쪽 패널: 결과 영역 -->
-            <div class="right-panel">
-                <div class="results" id="resultsArea">
-                    <div class="empty-state">
-                        <div>왼쪽에 글을 입력하면<br>여기에 결과가 표시됩니다.</div>
-                    </div>
-                </div>
+            <div class="input-wrapper">
+                <label>🏁 시작 체중 (kg)</label>
+                <input type="number" id="startWeight" value="78.5" step="0.1" inputmode="decimal">
             </div>
+            <div class="input-wrapper">
+                <label>🎯 목표 체중 (kg)</label>
+                <input type="number" id="goal1Weight" value="70" step="0.1" inputmode="decimal">
+            </div>
+            <div class="input-wrapper">
+                <label>🍽️ 일평균 섭취 (kcal)</label>
+                <input type="number" id="dailyIntake" value="1862" step="50" inputmode="decimal" placeholder="기본: 1862">
+            </div>
+            <button class="add-btn" style="background-color: var(--secondary);" onclick="App.saveSettings()">저장</button>
         </div>
 
-        <!-- 상태 표시줄 -->
-        <div class="status-bar" id="statusBar">
-            <div class="status-item">📊 글자 수: <span>0자</span></div>
-            <div class="status-item">📝 단어 수: <span>0개</span></div>
-            <div class="status-item">📑 줄 수: <span>0줄</span></div>
-            <div class="status-item">¶ 문단 수: <span>0개</span></div>
-            <div class="status-item">⏱️ 예상 읽기: <span>0초</span></div>
-            <div class="status-item">🧵 생성된 타래: <span>0개</span></div>
+        <h4 style="margin-top:0;">📂 데이터 관리</h4>
+        <div class="input-group" style="margin-bottom: 20px; border: 1px dashed #ccc; padding: 10px; border-radius: 10px;">
+             <div class="input-wrapper">
+                 <label>CSV/JSON 불러오기</label>
+                 <input type="file" id="csvFileInput" accept=".csv, .json" style="border:none;">
+             </div>
+             <button class="add-btn" style="background-color: var(--text-light); padding: 8px 15px; font-size: 0.9rem;" onclick="App.importData()">불러오기</button>
+             <button class="add-btn" style="background-color: var(--primary); padding: 8px 15px; font-size: 0.9rem;" onclick="App.exportCSV()">CSV 내보내기</button>
+             <button class="add-btn" style="background-color: var(--secondary); padding: 8px 15px; font-size: 0.9rem;" onclick="App.exportJSON()">JSON 백업</button>
         </div>
+        <p style="font-size: 0.8rem; color: var(--text-light); margin-top: -10px; margin-bottom: 20px;">
+            iOS 의 <a href="https://apps.apple.com/be/app/weightdrop-weight-loss-tracker/id786267891" target="_blank" rel="noopener">‎WeightDrop Weight Loss Tracker App</a> 앱의 백업 데이터 불러오기를 지원합니다.
+        </p>
 
+        <div class="danger-zone">
+            <h4 style="color: var(--danger); margin-top:0;">⚠️ 위험 구역</h4>
+            <p style="font-size: 0.9rem; margin-bottom: 10px;">모든 데이터를 삭제하려면 <strong>"초기화"</strong>라고 입력하세요.</p>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="resetConfirmInput" placeholder="초기화 입력" style="max-width: 150px;">
+                <button onclick="App.safeResetData()" style="background-color: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">삭제</button>
+            </div>
+        </div>
     </div>
 
-    <div id="toast">✅ 복사 완료!</div>
-
-    <script>
-        (function() {
-            "use strict";
-
-            // 1. 상수 및 설정 관리
-            const CONFIG = {
-                VERSION: "타래 재단사 7.6 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
-                STORAGE_KEY: "threadTailorSettings",
-                DRAFT_KEY: "threadTailorDraft",
-                LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
-                URL_WEIGHTS: {
-                    TWITTER: 23,
-                    BSKY_ADDED_LEN: 16
-                },
-                DEBOUNCE_MS: 500,
-                LOOP_LIMIT: 5,
-                TIMEOUT_MS: 3000, 
-                MESSAGES: {
-                    EMPTY_STATE: "왼쪽에 글을 입력하면<br>여기에 결과가 표시됩니다.",
-                    EMPTY_INPUT: "⚠️ 텍스트를 입력해주세요!",
-                    LIMIT_ERROR: "⚠️ 최소 10자 이상 설정해주세요!",
-                    RESET_CONFIRM: "모든 내용을 지우고 초기화하시겠습니까?",
-                    RESET_DONE: "🗑️ 초기화되었습니다.",
-                    SETTINGS_DONE: "자 설정 완료",
-                    SPLIT_DONE: "🎉 자르기 완료! 첫 번째 글이 복사되었어요 📋",
-                    COPY_ALL: "📑 전체 복사",
-                    SAVE_FILE: "💾 저장",
-                    COPY_BTN: "📋 복사하기",
-                    COPIED: "✅ 복사됨!",
-                    FAIL: "❌ 복사 실패 (권한 확인 필요)",
-                    CLIPBOARD_SUCCESS: "✨ 클립보드에 복사되었어요!",
-                    FILE_ERROR: "❌ 텍스트 파일(.txt)만 읽을 수 있습니다.",
-                    STORAGE_ERROR: "⚠️ 설정 저장 실패 (공간 부족/프라이버시 모드)",
-                    UNBREAKABLE: "⚠️ 너무 긴 단어/URL이 있어 강제로 잘랐습니다."
-                }
-            };
-
-            // 2. DOM 관리 도우미
-            class DOMHelper {
-                static getElements() {
-                    return {
-                        html: document.documentElement,
-                        appTitle: document.getElementById('appTitle'),
-                        inputText: document.getElementById('inputText'),
-                        limitInput: document.getElementById('limit'),
-                        positionSelect: document.getElementById('position'),
-                        paragraphModeSelect: document.getElementById('paragraphMode'),
-                        numberFormatSelect: document.getElementById('numberFormat'),
-                        customFormatInput: document.getElementById('customFormatInput'),
-                        urlModeSelect: document.getElementById('urlMode'),
-                        resultsArea: document.getElementById('resultsArea'),
-                        totalCount: document.getElementById('totalCount'),
-                        bskyCount: document.getElementById('bskyCount'),
-                        twitterCount: document.getElementById('twitterCount'),
-                        toast: document.getElementById('toast'),
-                        presetContainer: document.getElementById('presetContainer'),
-                        controlsContainer: document.getElementById('controlsContainer'),
-                        btnReset: document.getElementById('btn-reset'),
-                        btnSplit: document.getElementById('btn-split'),
-                        btnFile: document.getElementById('btn-file'),
-                        fileInput: document.getElementById('fileInput'),
-                        themeToggle: document.getElementById('themeToggle'),
-                        statusBar: document.getElementById('statusBar')
-                    };
-                }
-
-                static createElement(tag, className, textContent = '') {
-                    const el = document.createElement(tag);
-                    if (className) el.className = className;
-                    if (textContent) el.textContent = textContent;
-                    return el;
-                }
-
-                static setText(el, text) {
-                    if (el && el.textContent !== text) el.textContent = text;
-                }
-
-                static setStyle(el, prop, value) {
-                    if (el && el.style[prop] !== value) el.style[prop] = value;
-                }
-
-                static setClass(el, className, add) {
-                    if (!el) return;
-                    if (add && !el.classList.contains(className)) el.classList.add(className);
-                    else if (!add && el.classList.contains(className)) el.classList.remove(className);
-                }
-
-                static createCard(chunk, metaInfo) {
-                    const { content, current, realLen, weightLen, isUnbreakable, urlMode } = metaInfo;
-                    const card = this.createElement('div', `tweet-card${isUnbreakable ? ' warning' : ''}`);
-                    
-                    const header = this.createElement('div', 'mockup-header');
-                    const avatar = this.createElement('div', 'mockup-avatar', '👤');
-                    const info = this.createElement('div', 'mockup-info');
-                    const name = this.createElement('div', 'mockup-name', '나의 타래');
-                    const handle = this.createElement('div', 'mockup-handle', '@thread_tailor');
-                    info.append(name, handle);
-                    header.append(avatar, info);
-
-                    const meta = this.createElement('div', 'card-meta-header');
-                    const badge = this.createElement('span', `badge${isUnbreakable ? ' warn' : ''}`, 
-                        isUnbreakable ? `Part ${current} ⚠️` : `Part ${current}`);
-                    
-                    let lenText = `${realLen}자`;
-                    if (urlMode !== 'off' && realLen !== weightLen) {
-                        lenText = `${weightLen}자 (실제 ${realLen})`;
-                    }
-                    const lenSpan = this.createElement('span', '', lenText);
-                    lenSpan.style.fontSize = '0.85rem';
-                    lenSpan.style.color = 'var(--text-secondary)';
-                    meta.append(badge, lenSpan);
-
-                    const body = this.createElement('div', 'card-content', content);
-                    const btn = this.createElement('button', 'copy-btn', CONFIG.MESSAGES.COPY_BTN);
-                    btn.dataset.content = content;
-
-                    card.append(header, meta, body, btn);
-                    return card;
-                }
-            }
-
-            // 3. 클립보드 매니저
-            class ClipboardManager {
-                static async copy(text, triggerBtn) {
-                    if (!text) return;
-                    let success = false;
-                    try {
-                        if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
-                            await navigator.clipboard.writeText(text);
-                            success = true;
-                        } else {
-                            throw new Error("Clipboard API unavailable");
-                        }
-                    } catch (err) {
-                        success = this.fallbackCopy(text);
-                    }
-
-                    if (success) this.showSuccess(triggerBtn);
-                    else AppController.showToast(CONFIG.MESSAGES.FAIL);
-                }
-
-                static fallbackCopy(text) {
-                    const textArea = document.createElement("textarea");
-                    textArea.value = text;
-                    textArea.style.position = "fixed";
-                    textArea.style.left = "-9999px";
-                    textArea.style.top = "0";
-                    textArea.setAttribute("readonly", "");
-                    document.body.appendChild(textArea);
-                    
-                    if (navigator.userAgent.match(/ipad|iphone/i)) {
-                        const range = document.createRange();
-                        range.selectNodeContents(textArea);
-                        const selection = window.getSelection();
-                        selection.removeAllRanges();
-                        selection.addRange(range);
-                        textArea.setSelectionRange(0, 999999);
-                    } else {
-                        textArea.select();
-                    }
-
-                    let success = false;
-                    try { success = document.execCommand('copy'); } catch (err) { success = false; }
-                    document.body.removeChild(textArea);
-                    return success;
-                }
-
-                static showSuccess(btn) {
-                    if (!btn) {
-                        AppController.showToast(CONFIG.MESSAGES.CLIPBOARD_SUCCESS);
-                        return;
-                    }
-                    const originalText = btn.textContent;
-                    btn.classList.add('copied');
-                    btn.textContent = CONFIG.MESSAGES.COPIED;
-                    setTimeout(() => {
-                        btn.classList.remove('copied');
-                        if (originalText.includes('📋') || originalText === CONFIG.MESSAGES.COPY_BTN) {
-                            btn.textContent = CONFIG.MESSAGES.COPY_BTN;
-                        } else {
-                            btn.textContent = originalText;
-                        }
-                    }, 2000);
-                    AppController.showToast(CONFIG.MESSAGES.CLIPBOARD_SUCCESS);
-                }
-            }
-
-            // 4. 텍스트 처리 엔진
-            class TextEngine {
-                static init() {
-                    this.segmenter = new Intl.Segmenter('ko', { granularity: 'grapheme' });
-                    this.REGEX_OBJ = {
-                        URL_GLOBAL: /https?:\/\/[^\s]+(?<![.,?!:;])/g,
-                        BLUESKY_LINK: /(^|\s|\()((https?:\/\/[^\s]+)|(([a-z][a-z0-9]*(?:\.[a-z0-9]+)+)[^\s]*))/gim
-                    };
-                }
-
-                static countGraphemes(text) {
-                    let count = 0;
-                    const iterator = this.segmenter.segment(text)[Symbol.iterator]();
-                    while (!iterator.next().done) count++;
-                    return count;
-                }
-
-                static countBlueskyGraphemes(text) {
-                    let processed = text.replace(this.REGEX_OBJ.BLUESKY_LINK, (match, p1, p2) => {
-                        let cleanUrl = p2.replace(/^https?:\/\//i, '');
-                        let fullLen = this.countGraphemes(cleanUrl);
-                        
-                        const domain = cleanUrl.split('/')[0];
-                        const domainLen = this.countGraphemes(domain);
-                        const shortenedLen = domainLen + CONFIG.URL_WEIGHTS.BSKY_ADDED_LEN;
-                        
-                        const finalLen = (fullLen < shortenedLen) ? fullLen : shortenedLen;
-                        return p1 + "x".repeat(finalLen);
-                    });
-                    return this.countGraphemes(processed);
-                }
-
-                static isTwitterWeightOne(code) {
-                    return (code >= 0 && code <= 4351) || 
-                           (code >= 8192 && code <= 8205) ||
-                           (code >= 8208 && code <= 8223) ||
-                           (code >= 8242 && code <= 8247);
-                }
-
-                static getLength(text, urlMode) {
-                    if (urlMode === 'twitter') {
-                        const normalized = text.normalize('NFC');
-                        const masked = normalized.replace(this.REGEX_OBJ.URL_GLOBAL, 'x'.repeat(CONFIG.URL_WEIGHTS.TWITTER));
-                        
-                        let totalWeight = 0;
-                        const iterator = this.segmenter.segment(masked)[Symbol.iterator]();
-                        let result = iterator.next();
-                        
-                        while (!result.done) {
-                            const segmentStr = result.value.segment;
-                            const code = segmentStr.codePointAt(0);
-                            totalWeight += this.isTwitterWeightOne(code) ? 1 : 2;
-                            result = iterator.next();
-                        }
-                        return totalWeight;
-
-                    } else if (urlMode === 'bluesky') {
-                        return this.countBlueskyGraphemes(text);
-                    }
-                    return this.countGraphemes(text);
-                }
-
-                static format(chunk, options, current, total) {
-                    const { position, format, customFormatStr } = options;
-                    
-                    if (format === 'link_bottom') {
-                        if (current === 1 && total > 1) return `${chunk}\n\n원문 링크 👇`;
-                        return chunk;
-                    }
-
-                    if (format === 'google') {
-                        const cleanChunk = chunk.replace(/\s+$/, '');
-                        if (current === 1) {
-                            return `${cleanChunk} 🧵`;
-                        } else {
-                            return `🧵(${current}/${total}) ${cleanChunk}`;
-                        }
-                    }
-
-                    if (format === 'korean_cont') {
-                        const cleanChunk = chunk.replace(/\s+$/, '');
-                        if (total === 1) return cleanChunk;
-
-                        const header = "(위에서 이어짐)\n\n";
-                        const footer = "\n\n(계속)";
-
-                        if (current === 1) return `${cleanChunk}${footer}`;
-                        else if (current === total) return `${header}${cleanChunk}`;
-                        else return `${header}${cleanChunk}${footer}`;
-                    }
-
-                    let numbering = '';
-                    if (format === 'custom') {
-                        numbering = (customFormatStr || '{current}/{total}')
-                            .replaceAll('{current}', current)
-                            .replaceAll('{total}', total);
-                    } else {
-                        const map = {
-                            'bracket': `[${current}/${total}]`,
-                            'simple': `${current}/${total}`,
-                            'paren': `(${current}/${total})`,
-                            'thread': `(🧵${current}/${total})`,
-                            'memo': `(📝${current}/${total})`,
-                            'finger': `(👇${current}/${total})`
-                        };
-                        numbering = map[format] || map['thread'];
-                    }
-
-                    const cleanChunk = chunk.replace(/\s+$/, '');
-                    return position === 'front' 
-                        ? `${numbering} ${cleanChunk}` 
-                        : `${cleanChunk} ${numbering}`;
-                }
-
-                static split(text, limit, options) {
-                    if (options.format === 'link_bottom') {
-                        const match = text.match(/(https?:\/\/[^\s]+)/);
-                        if (match) {
-                            const url = match[0];
-                            const title = text.substring(0, match.index).trim();
-                            const body = text.substring(match.index + url.length).trim();
-                            if (title && body) {
-                                return [
-                                    { text: body, isUnbreakable: false },
-                                    { text: title + "\n\n" + url, isUnbreakable: false }
-                                ];
-                            }
-                        }
-                    }
-
-                    const { urlMode, paragraphMode } = options;
-                    const safeDivisor = Math.max(1, limit - 10);
-                    let estimatedTotal = Math.ceil(this.getLength(text, urlMode) / safeDivisor) || 1;
-                    let chunks = [];
-                    let loopCount = 0;
-
-                    while (loopCount < CONFIG.LOOP_LIMIT) {
-                        const dummyNum = this.format("", options, estimatedTotal, estimatedTotal).trim();
-                        const overhead = this.getLength(dummyNum, urlMode) + 1;
-                        const safeLimit = limit - overhead;
-
-                        if (safeLimit < 1) return this.runAlgo(text, Math.max(1, limit), urlMode);
-
-                        chunks = paragraphMode === 'on' 
-                            ? this.splitByPara(text, safeLimit, urlMode)
-                            : this.runAlgo(text, safeLimit, urlMode);
-
-                        const actualTotal = chunks.length;
-                        if (String(actualTotal).length <= String(estimatedTotal).length) break;
-                        estimatedTotal = actualTotal;
-                        loopCount++;
-                    }
-                    return chunks;
-                }
-
-                static splitByPara(text, limit, urlMode) {
-                    const paragraphs = text.split('\n');
-                    const chunks = [];
-                    let currentLen = 0;
-                    let currentBuffer = ""; 
-
-                    for (let i = 0; i < paragraphs.length; i++) {
-                        const para = paragraphs[i];
-                        const paraLen = this.getLength(para, urlMode);
-                        const newlineCost = currentBuffer.length > 0 ? 1 : 0; 
-
-                        if (paraLen > limit) {
-                            if (currentBuffer.length > 0) {
-                                chunks.push({ text: currentBuffer, isUnbreakable: false });
-                                currentBuffer = "";
-                                currentLen = 0;
-                            }
-                            const subChunks = this.runAlgo(para, limit, urlMode);
-                            for (let j = 0; j < subChunks.length; j++) {
-                                chunks.push(subChunks[j]);
-                            }
-                        } else {
-                            if (currentLen + newlineCost + paraLen <= limit) {
-                                if (currentBuffer.length > 0) currentBuffer += "\n";
-                                currentBuffer += para;
-                                currentLen += newlineCost + paraLen;
-                            } else {
-                                chunks.push({ text: currentBuffer, isUnbreakable: false });
-                                currentBuffer = para;
-                                currentLen = paraLen;
-                            }
-                        }
-                    }
-                    if (currentBuffer.length > 0) {
-                        chunks.push({ text: currentBuffer, isUnbreakable: false });
-                    }
-                    return chunks;
-                }
-
-                static runAlgo(text, limit, urlMode) {
-                    const chunks = [];
-                    let start = 0;
-                    const processedText = urlMode === 'twitter' ? text.normalize('NFC') : text;
-                    const len = processedText.length;
-                    const startTime = Date.now();
-                    const regexSource = urlMode === 'bluesky' ? this.REGEX_OBJ.BLUESKY_LINK : this.REGEX_OBJ.URL_GLOBAL;
-                    const matches = [...processedText.matchAll(new RegExp(regexSource))];
-                    let urlIdx = 0;
-
-                    while (start < len) {
-                        if (Date.now() - startTime > CONFIG.TIMEOUT_MS) {
-                            chunks.push({ text: processedText.substring(start), isUnbreakable: true }); 
-                            break;
-                        }
-
-                        let currentWeight = 0;
-                        let splitIdx = start;
-                        let lastSafeSplitIdx = -1;
-                        let isUnbreakable = false;
-                        
-                        const segIter = this.segmenter.segment(processedText.substring(start))[Symbol.iterator]();
-                        let segResult = segIter.next();
-
-                        while (!segResult.done) {
-                            const seg = segResult.value;
-                            const absStart = start + seg.index;
-                            const segLen = seg.segment.length;
-                            const absEnd = absStart + segLen;
-
-                            let inUrl = false;
-                            let currentUrlMatch = null;
-
-                            while (urlIdx < matches.length && matches[urlIdx].index + matches[urlIdx][0].length <= absStart) {
-                                urlIdx++;
-                            }
-                            
-                            if (urlIdx < matches.length) {
-                                const m = matches[urlIdx];
-                                if (absStart >= m.index && absStart < m.index + m[0].length) {
-                                    inUrl = true;
-                                    currentUrlMatch = m;
-                                }
-                            }
-
-                            if (inUrl) {
-                                if (absStart === currentUrlMatch.index) {
-                                    if (urlMode === 'twitter') {
-                                        currentWeight += CONFIG.URL_WEIGHTS.TWITTER;
-                                    } else if (urlMode === 'bluesky') {
-                                        let cleanUrl = currentUrlMatch[0].replace(/^https?:\/\//i, '');
-                                        let fullLen = this.countGraphemes(cleanUrl);
-                                        let domain = cleanUrl.split('/')[0];
-                                        let domainLen = this.countGraphemes(domain);
-                                        let shortenedLen = domainLen + CONFIG.URL_WEIGHTS.BSKY_ADDED_LEN;
-                                        currentWeight += (fullLen < shortenedLen) ? fullLen : shortenedLen;
-                                    } else {
-                                        currentWeight += this.countGraphemes(currentUrlMatch[0]);
-                                    }
-                                }
-                            } else {
-                                let charWeight = 1;
-                                if (urlMode === 'twitter') {
-                                    const code = seg.segment.codePointAt(0);
-                                    charWeight = this.isTwitterWeightOne(code) ? 1 : 2;
-                                }
-                                currentWeight += charWeight;
-
-                                if (/\s|[.!?]/.test(seg.segment)) {
-                                    lastSafeSplitIdx = absEnd;
-                                }
-                            }
-
-                            if (currentWeight > limit) {
-                                if (inUrl && currentUrlMatch.index > start) {
-                                    splitIdx = currentUrlMatch.index;
-                                } else if (lastSafeSplitIdx > start) {
-                                    splitIdx = lastSafeSplitIdx;
-                                } else {
-                                    splitIdx = absStart; 
-                                    if (splitIdx === start) splitIdx = absEnd;
-                                    isUnbreakable = true;
-                                }
-                                break;
-                            }
-                            
-                            splitIdx = absEnd;
-                            segResult = segIter.next();
-                        }
-
-                        chunks.push({ 
-                            text: processedText.substring(start, splitIdx), 
-                            isUnbreakable: isUnbreakable 
-                        });
-
-                        start = splitIdx;
-                        while (start < len && /\s/.test(processedText[start]) && processedText[start] !== '\n') start++;
-                        if (start < len && processedText[start] === '\n') start++;
-                    }
-                    return chunks;
-                }
-            }
-
-            // 5. 애플리케이션 컨트롤러
-            class AppController {
-                constructor() {
-                    this.dom = DOMHelper.getElements();
-                    this.statusSpans = Array.from(this.dom.statusBar.querySelectorAll('span'));
-                    
-                    this.settings = {
-                        limit: 300,
-                        urlMode: 'off',
-                        position: 'back',
-                        paragraphMode: 'on',
-                        format: 'thread',
-                        customFormatStr: '',
-                        theme: 'light'
-                    };
-                    this.debounceTimer = null;
-                    
-                    TextEngine.init();
-                    this.init();
-                }
-
-                init() {
-                    this.loadSettings();
-                    this.bindEvents();
-                    this.initDragAndDrop();
-                    
-                    DOMHelper.setText(this.dom.appTitle, "✂️ " + CONFIG.VERSION);
-                    document.title = "✂️ " + CONFIG.VERSION;
-
-                    if (this.dom.inputText.value) {
-                        this.processText(true);
-                        this.updateCount(this.dom.inputText.value);
-                    }
-                }
-
-                loadSettings() {
-                    try {
-                        const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-                        if (saved) {
-                            this.settings = { ...this.settings, ...JSON.parse(saved) };
-                        } else {
-                            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-                            this.settings.theme = prefersDark ? 'dark' : 'light';
-                        }
-                        const draft = localStorage.getItem(CONFIG.DRAFT_KEY);
-                        if (draft) this.dom.inputText.value = draft;
-                    } catch (e) { console.warn(e); }
-                    this.applySettingsToDOM();
-                }
-
-                saveSettings() {
-                    try { localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(this.settings)); } 
-                    catch (e) { AppController.showToast(CONFIG.MESSAGES.STORAGE_ERROR); }
-                }
-
-                saveDraft(text) {
-                    try { localStorage.setItem(CONFIG.DRAFT_KEY, text); } catch (e) {}
-                }
-
-                checkActivePreset() {
-                    const s = this.settings;
-                    let activePreset = '';
-                    if (s.limit == CONFIG.LIMITS.TWITTER && s.urlMode === 'twitter') activePreset = 'twitter';
-                    else if (s.limit == CONFIG.LIMITS.BLUESKY && s.urlMode === 'bluesky') activePreset = 'bluesky';
-                    else if (s.limit == CONFIG.LIMITS.THREADS && s.urlMode === 'off') activePreset = 'threads';
-
-                    this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => DOMHelper.setClass(b, 'active', false));
-                    if (activePreset) {
-                        const target = document.getElementById(`btn-${activePreset}`);
-                        DOMHelper.setClass(target, 'active', true);
-                    }
-                    return activePreset;
-                }
-
-                applySettingsToDOM() {
-                    const s = this.settings;
-                    if (this.dom.limitInput.value != s.limit) this.dom.limitInput.value = s.limit;
-                    if (this.dom.urlModeSelect.value !== s.urlMode) this.dom.urlModeSelect.value = s.urlMode;
-                    if (this.dom.positionSelect.value !== s.position) this.dom.positionSelect.value = s.position;
-                    if (this.dom.paragraphModeSelect.value !== s.paragraphMode) this.dom.paragraphModeSelect.value = s.paragraphMode;
-                    if (this.dom.numberFormatSelect.value !== s.format) this.dom.numberFormatSelect.value = s.format;
-                    if (this.dom.customFormatInput.value !== s.customFormatStr) this.dom.customFormatInput.value = s.customFormatStr;
-                    
-                    if (s.format === 'custom') DOMHelper.setClass(this.dom.customFormatInput, 'show', true);
-                    else DOMHelper.setClass(this.dom.customFormatInput, 'show', false);
-
-                    if (this.dom.html.getAttribute('data-theme') !== s.theme) {
-                        this.dom.html.setAttribute('data-theme', s.theme);
-                        DOMHelper.setText(this.dom.themeToggle, s.theme === 'dark' ? '☀️' : '🌙');
-                    }
-                    this.checkActivePreset();
-                }
-
-                syncSettingsFromDOM() {
-                    this.settings.limit = parseInt(this.dom.limitInput.value) || 300;
-                    this.settings.urlMode = this.dom.urlModeSelect.value;
-                    this.settings.position = this.dom.positionSelect.value;
-                    this.settings.paragraphMode = this.dom.paragraphModeSelect.value;
-                    this.settings.format = this.dom.numberFormatSelect.value;
-                    this.settings.customFormatStr = this.dom.customFormatInput.value;
-                    
-                    if (this.settings.format === 'custom') DOMHelper.setClass(this.dom.customFormatInput, 'show', true);
-                    else DOMHelper.setClass(this.dom.customFormatInput, 'show', false);
-
-                    this.saveSettings();
-                    this.checkActivePreset(); 
-                    this.updateCount(this.dom.inputText.value);
-                }
-
-                bindEvents() {
-                    this.dom.themeToggle.addEventListener('click', () => {
-                        this.settings.theme = this.settings.theme === 'dark' ? 'light' : 'dark';
-                        this.applySettingsToDOM();
-                        this.saveSettings();
-                    });
-
-                    this.dom.presetContainer.addEventListener('click', (e) => {
-                        const btn = e.target.closest('.preset-btn');
-                        if (btn) this.setPreset(btn.dataset.preset);
-                    });
-
-                    [this.dom.limitInput, this.dom.positionSelect, this.dom.paragraphModeSelect, this.dom.urlModeSelect].forEach(el => {
-                        el.addEventListener('change', () => {
-                            this.syncSettingsFromDOM();
-                            this.debounceProcess();
-                        });
-                    });
-
-                    this.dom.numberFormatSelect.addEventListener('change', () => {
-                        this.syncSettingsFromDOM();
-                        this.debounceProcess();
-                    });
-
-                    this.dom.customFormatInput.addEventListener('input', () => {
-                        this.syncSettingsFromDOM();
-                        this.debounceProcess();
-                    });
-
-                    this.dom.limitInput.addEventListener('input', () => {
-                        this.checkActivePreset(); 
-                        this.debounceProcess();
-                    });
-
-                    this.dom.inputText.addEventListener('input', (e) => {
-                        this.updateCount(e.target.value);
-                        this.saveDraft(e.target.value);
-                        this.debounceProcess();
-                    });
-
-                    this.dom.btnReset.addEventListener('click', () => this.resetAll());
-                    this.dom.btnSplit.addEventListener('click', () => this.processText(false));
-
-                    this.dom.btnFile.addEventListener('click', () => this.dom.fileInput.click());
-                    this.dom.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-
-                    this.dom.resultsArea.addEventListener('click', (e) => {
-                        const btn = e.target.closest('button');
-                        if (!btn) return;
-                        
-                        if (btn.classList.contains('copy-btn')) {
-                            ClipboardManager.copy(btn.dataset.content, btn);
-                        } else if (btn.classList.contains('copy-all-btn')) {
-                            const allText = this.getAllResultsText();
-                            ClipboardManager.copy(allText, btn);
-                        } else if (btn.classList.contains('download-btn')) {
-                            this.downloadResults();
-                        }
-                    });
-
-                    document.addEventListener('keydown', (e) => {
-                        // Global Keyboard Shortcuts
-                        
-                        // Ctrl + Enter: Split
-                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                            e.preventDefault();
-                            this.dom.btnSplit.click();
-                            return;
-                        }
-
-                        // Ctrl + Shift + C: Copy All
-                        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
-                            e.preventDefault();
-                            const copyAllBtn = this.dom.resultsArea.querySelector('.copy-all-btn');
-                            if (copyAllBtn) copyAllBtn.click();
-                            return;
-                        }
-
-                        // Ctrl + S: Save/Download
-                        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
-                            e.preventDefault();
-                            const downloadBtn = this.dom.resultsArea.querySelector('.download-btn');
-                            if (downloadBtn) downloadBtn.click();
-                            return;
-                        }
-
-                        // Alt + Delete: Reset
-                        if (e.altKey && e.key === 'Delete') {
-                            e.preventDefault();
-                            this.dom.btnReset.click();
-                            return;
-                        }
-
-                        // Ctrl + O: Open File
-                        if ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O')) {
-                            e.preventDefault();
-                            this.dom.btnFile.click();
-                            return;
-                        }
-
-                        // / (Slash): Focus Input
-                        if (e.key === '/' && document.activeElement !== this.dom.inputText && document.activeElement.tagName !== 'INPUT') {
-                            e.preventDefault();
-                            this.dom.inputText.focus();
-                            return;
-                        }
-
-                        // Alt + B: Bluesky
-                        if (e.altKey && (e.key === 'b' || e.key === 'B')) {
-                            e.preventDefault();
-                            this.setPreset('bluesky');
-                            return;
-                        }
-
-                        // Alt + X: Twitter
-                        if (e.altKey && (e.key === 'x' || e.key === 'X')) {
-                            e.preventDefault();
-                            this.setPreset('twitter');
-                            return;
-                        }
-
-                        // Alt + T: Threads
-                        if (e.altKey && (e.key === 't' || e.key === 'T')) {
-                            e.preventDefault();
-                            this.setPreset('threads');
-                            return;
-                        }
-                        
-                        // Alt + D: Dark Mode
-                        if (e.altKey && (e.key === 'd' || e.key === 'D')) {
-                            e.preventDefault();
-                            this.dom.themeToggle.click();
-                            return;
-                        }
-                    });
-                }
-
-                initDragAndDrop() {
-                    const zone = this.dom.inputText;
-                    const prevent = e => { e.preventDefault(); e.stopPropagation(); };
-                    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-                        zone.addEventListener(e, prevent);
-                        document.body.addEventListener(e, prevent);
-                    });
-                    
-                    zone.addEventListener('dragenter', () => DOMHelper.setClass(zone, 'drag-over', true));
-                    zone.addEventListener('dragover', () => DOMHelper.setClass(zone, 'drag-over', true));
-                    zone.addEventListener('dragleave', () => DOMHelper.setClass(zone, 'drag-over', false));
-                    
-                    zone.addEventListener('drop', (e) => {
-                        DOMHelper.setClass(zone, 'drag-over', false);
-                        const file = e.dataTransfer.files[0];
-                        this.readFile(file);
-                    });
-                }
-
-                handleFileUpload(e) {
-                    const file = e.target.files[0];
-                    this.readFile(file);
-                    e.target.value = '';
-                }
-
-                readFile(file) {
-                    if (file && (file.type === "text/plain" || file.name.endsWith('.txt'))) {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                            this.dom.inputText.value = ev.target.result;
-                            this.saveDraft(this.dom.inputText.value);
-                            this.updateCount(this.dom.inputText.value);
-                            this.debounceProcess();
-                        };
-                        reader.readAsText(file);
-                    } else if (file) {
-                        AppController.showToast(CONFIG.MESSAGES.FILE_ERROR);
-                    }
-                }
-
-				setPreset(platform) {
-                    if (platform === 'bluesky') {
-                        this.dom.limitInput.value = CONFIG.LIMITS.BLUESKY;
-                        this.dom.urlModeSelect.value = 'bluesky';
-                        this.dom.numberFormatSelect.value = 'thread';
-                    } else if (platform === 'twitter') {
-                        this.dom.limitInput.value = CONFIG.LIMITS.TWITTER;
-                        this.dom.urlModeSelect.value = 'twitter';
-                        this.dom.numberFormatSelect.value = 'link_bottom';
-                    } else if (platform === 'threads') {
-                        this.dom.limitInput.value = CONFIG.LIMITS.THREADS;
-                        this.dom.urlModeSelect.value = 'off';
-                        this.dom.numberFormatSelect.value = 'thread';
-                    }
-                    
-                    this.syncSettingsFromDOM();
-                    this.processText(true);
-                    this.updateCount(this.dom.inputText.value);
-                    AppController.showToast(`⚙️ ${this.dom.limitInput.value}${CONFIG.MESSAGES.SETTINGS_DONE}`);
-                }
-
-                updateCount(text) {
-                    const len = text.length; 
-                    DOMHelper.setText(this.dom.totalCount, `현재: ${len.toLocaleString()}자`);
-
-                    DOMHelper.setStyle(this.dom.bskyCount, 'display', 'none');
-                    DOMHelper.setStyle(this.dom.twitterCount, 'display', 'none');
-
-                    if (len === 0) return;
-
-                    const currentPreset = this.checkActivePreset();
-                    if (currentPreset === 'twitter') {
-                        const twitterLen = TextEngine.getLength(text, 'twitter');
-                        const status = twitterLen <= CONFIG.LIMITS.TWITTER ? '✅' : '❌';
-                        DOMHelper.setText(this.dom.twitterCount, `🐦 트위터: ${twitterLen.toLocaleString()}자 ${status}`);
-                        DOMHelper.setStyle(this.dom.twitterCount, 'display', 'block');
-                    } else if (currentPreset === 'bluesky') {
-                        const bskyLen = TextEngine.countBlueskyGraphemes(text);
-                        const status = bskyLen <= CONFIG.LIMITS.BLUESKY ? '✅' : '❌';
-                        DOMHelper.setText(this.dom.bskyCount, `🦋 블루스카이: ${bskyLen.toLocaleString()}자 ${status}`);
-                        DOMHelper.setStyle(this.dom.bskyCount, 'display', 'block');
-                    }
-                }
-
-                debounceProcess() {
-                    if (this.debounceTimer) clearTimeout(this.debounceTimer);
-                    this.debounceTimer = setTimeout(() => {
-                        this.syncSettingsFromDOM();
-                        this.processText(true);
-                    }, CONFIG.DEBOUNCE_MS);
-                }
-
-                resetAll() {
-                    this.dom.inputText.value = "";
-                    this.saveDraft("");
-                    this.updateCount("");
-                    this.renderResults([]);
-                    this.updateStatusBar(0, 0);
-                    this.dom.inputText.focus();
-                    AppController.showToast(CONFIG.MESSAGES.RESET_DONE);
-                }
-
-                processText(isAuto) {
-                    const text = this.dom.inputText.value.trim();
-                    const limit = this.settings.limit;
-
-                    if (!text) {
-                        if (!isAuto) AppController.showToast(CONFIG.MESSAGES.EMPTY_INPUT);
-                        this.renderResults([]);
-                        this.updateStatusBar(0, 0);
-                        return;
-                    }
-                    if (limit < CONFIG.LIMITS.MIN) {
-                        if (!isAuto) AppController.showToast(CONFIG.MESSAGES.LIMIT_ERROR);
-                        return;
-                    }
-
-                    const chunks = TextEngine.split(text, limit, this.settings);
-                    this.renderResults(chunks, isAuto);
-                    this.updateStatusBar(text.length, chunks.length, text);
-                }
-
-                updateStatusBar(chars, chunksCount, text = "") {
-                    const words = text ? text.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
-                    const lines = text ? text.split(/\r\n|\r|\n/).length : 0;
-                    const paras = text ? text.trim().split(/\n\n+/).length : 0;
-                    const sec = Math.ceil(chars / 500 * 60);
-                    const timeText = sec < 60 ? `${sec}초` : `${Math.floor(sec/60)}분 ${sec%60}초`;
-
-                    const values = [
-                        `${chars.toLocaleString()}자`,
-                        `${words.toLocaleString()}개`,
-                        `${lines.toLocaleString()}줄`,
-                        `${paras.toLocaleString()}개`,
-                        timeText,
-                        `${chunksCount}개`
-                    ];
-
-                    requestAnimationFrame(() => {
-                        values.forEach((val, index) => {
-                            if (this.statusSpans[index]) {
-                                DOMHelper.setText(this.statusSpans[index], val);
-                            }
-                        });
-                    });
-                }
-
-                renderResults(chunks, isAuto) {
-                    const frag = document.createDocumentFragment();
-                    let hasUnbreakable = false;
-
-                    if (chunks.length === 0) {
-                        const div = DOMHelper.createElement('div', 'empty-state');
-                        const p = DOMHelper.createElement('div');
-                        const lines = CONFIG.MESSAGES.EMPTY_STATE.split('<br>');
-                        lines.forEach((line, index) => {
-                            p.appendChild(document.createTextNode(line));
-                            if (index < lines.length - 1) {
-                                p.appendChild(document.createElement('br'));
-                            }
-                        });
-                        div.appendChild(p);
-                        frag.appendChild(div);
-                    } else {
-                        const actionDiv = DOMHelper.createElement('div', 'results-header-actions');
-                        // Added keyboard hints dynamically to these buttons
-                        const copyAll = DOMHelper.createElement('button', 'copy-all-btn');
-                        copyAll.innerHTML = `${CONFIG.MESSAGES.COPY_ALL} <span class="kbd-hint">Ctrl+Shift+C</span>`;
-                        
-                        const downloadBtn = DOMHelper.createElement('button', 'download-btn');
-                        downloadBtn.innerHTML = `${CONFIG.MESSAGES.SAVE_FILE} <span class="kbd-hint">Ctrl+S</span>`;
-                        
-                        actionDiv.append(copyAll, downloadBtn);
-                        frag.appendChild(actionDiv);
-
-                        chunks.forEach((chunkObj, i) => {
-                            const chunkText = chunkObj.text;
-                            if (chunkObj.isUnbreakable) hasUnbreakable = true;
-                            
-                            const current = i + 1;
-                            const formatted = TextEngine.format(chunkText, this.settings, current, chunks.length);
-
-                            const metaInfo = {
-                                content: formatted,
-                                current: current,
-                                realLen: TextEngine.countGraphemes(formatted),
-                                weightLen: TextEngine.getLength(formatted, this.settings.urlMode),
-                                isUnbreakable: chunkObj.isUnbreakable,
-                                urlMode: this.settings.urlMode
-                            };
-
-                            const card = DOMHelper.createCard(chunkText, metaInfo);
-                            if (!isAuto) card.style.animationDelay = `${i * 0.05}s`;
-                            frag.appendChild(card);
-                        });
-                    }
-
-                    this.dom.resultsArea.replaceChildren(frag);
-
-                    if (hasUnbreakable && !isAuto) {
-                        AppController.showToast(CONFIG.MESSAGES.UNBREAKABLE);
-                    } else if (!isAuto && chunks.length > 0) {
-                        const first = this.dom.resultsArea.querySelector('.copy-btn');
-                        if (first) ClipboardManager.copy(first.dataset.content, first);
-                        AppController.showToast(CONFIG.MESSAGES.SPLIT_DONE);
-                    }
-                }
-
-                getAllResultsText() {
-                    return Array.from(this.dom.resultsArea.querySelectorAll('.copy-btn'))
-                        .map(b => b.dataset.content).join('\n\n');
-                }
-
-                downloadResults() {
-                    const text = this.getAllResultsText();
-                    if (!text) return;
-                    const blob = new Blob([text], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `thread_tailor_${new Date().toISOString().slice(0,10)}.txt`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                }
-
-                static showToast(msg) {
-                    const toast = document.getElementById('toast');
-                    if (toast.timer) clearTimeout(toast.timer);
-                    DOMHelper.setClass(toast, "show", false);
-                    void toast.offsetWidth;
-                    DOMHelper.setText(toast, msg);
-                    DOMHelper.setClass(toast, "show", true);
-                    toast.timer = setTimeout(() => DOMHelper.setClass(toast, "show", false), 3000);
-                }
-            }
-
-            new AppController();
-
-        })();
-    </script>
+    <!-- 입력 영역 (Enter 키 이벤트 지원) -->
+    <div class="card">
+        <h3>📅 오늘의 기록</h3>
+        <div class="input-group">
+            <div class="input-wrapper">
+                <label>날짜</label>
+                <input type="date" id="dateInput">
+            </div>
+            <div class="input-wrapper">
+                <label>현재 체중 (kg)</label>
+                <input type="number" id="weightInput" step="0.1" placeholder="예: 78.0" inputmode="decimal">
+            </div>
+            <div class="input-wrapper">
+                <label>체지방률 (%) <small>(선택)</small></label>
+                <input type="number" id="fatInput" step="0.1" placeholder="예: 20.5" inputmode="decimal">
+            </div>
+            <button class="add-btn" id="recordBtn" onclick="App.addRecord()">기록하기 📝</button>
+        </div>
+    </div>
+
+    <!-- 주간/월간 리포트 텍스트 -->
+    <div class="text-report">
+        <span style="font-size: 1.2rem;">📢</span>
+        <span id="analysisText">데이터를 입력하면 분석 리포트가 여기에 표시됩니다.</span>
+    </div>
+
+    <!-- 목표 달성 프로그레스 바 -->
+    <div class="card progress-card">
+        <h3 style="border:none; margin-bottom:10px;">🛤️ 목표 달성 현황</h3>
+        <div class="progress-track">
+            <div class="progress-fill" id="progressBarFill"></div>
+            <!-- 마커 -->
+            <div class="progress-marker start"></div>
+            <div class="progress-marker goal"></div>
+            
+            <!-- 현재 위치 표시 -->
+            <div class="progress-indicator-emoji" id="progressEmoji">👇</div>
+            <div class="progress-info-text" id="progressText">
+                정보 로딩중...
+            </div>
+        </div>
+        <div class="progress-labels">
+            <span id="labelGoal">목표: -kg</span>
+            <span id="labelStart">시작: -kg</span>
+        </div>
+
+        <!-- BMI 프로그레스 바 추가 -->
+        <div style="margin-top: 50px; padding-top: 20px; border-top: 1px dashed #e0e0e0;">
+            <h4 style="margin: 0 0 45px 0; font-size: 0.85rem; color: var(--text-light);">BMI 상태</h4>
+            <div class="progress-track" style="margin-top: 0;">
+                <!-- BMI 바: 왼쪽(낮음) -> 오른쪽(높음) 방향으로 채워짐. 그라데이션 적용 -->
+                <div class="progress-fill" id="bmiProgressBarFill" 
+                     style="left: 0; right: auto; background: linear-gradient(to right, #90caf9, #a5d6a7, #fff59d, #ffcc80, #ef9a9a, #ef5350);"></div>
+                
+                <!-- 현재 위치 표시 -->
+                <div class="progress-indicator-emoji" id="bmiProgressEmoji">📍</div>
+                <div class="progress-info-text" id="bmiProgressText">
+                    BMI 계산 중...
+                </div>
+            </div>
+            <div class="progress-labels" style="margin-top: -35px;">
+                <span id="bmiLabelLeft">BMI 10</span>
+                <span id="bmiLabelRight">BMI 45</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 핵심 통계 대시보드 -->
+    <div class="dashboard-grid">
+        <div class="stat-card">
+            <span class="stat-icon">⚖️</span>
+            <div class="stat-value" id="currentWeightDisplay">-</div>
+            <div class="stat-label">현재 체중</div>
+            <div class="stat-sub" id="bmiDisplay">BMI: -</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">📉</span>
+            <div class="stat-value" id="totalLostDisplay">-</div>
+            <div class="stat-label">총 감량</div>
+            <div class="stat-sub" id="percentLostDisplay">(-%)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🚀</span>
+            <div class="stat-value" id="progressPercent">-</div>
+            <div class="stat-label">목표 달성률</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🏔️</span>
+            <div class="stat-value" id="remainingWeightDisplay">-</div>
+            <div class="stat-label">남은 감량</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">⏳</span>
+            <div class="stat-value" id="remainingPercentDisplay">-</div>
+            <div class="stat-label">남은 비율</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🔮</span>
+            <div class="stat-value" id="predictedDate" style="font-size: 1.1rem; line-height: 1.8rem;">-</div>
+            <div class="stat-label">예상 완료일</div>
+            <div class="stat-sub" id="predictionRange" style="font-size:0.65rem;">(빠름~느림)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🏎️</span>
+            <div class="stat-value" id="dashboardRate7Days">-</div>
+            <div class="stat-label">최근 7일 일평균 감량</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🐢</span>
+            <div class="stat-value" id="dashboardRate30Days">-</div>
+            <div class="stat-label">최근 30일 일평균 감량</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🔥</span>
+            <div class="stat-value" id="streakDisplay">-</div>
+            <div class="stat-label">연속 감량 (Streak)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">📊</span>
+            <div class="stat-value" id="successRateDisplay">-</div>
+            <div class="stat-label">감량 성공률 (일일)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">📏</span>
+            <div class="stat-value" id="minMaxWeightDisplay" style="font-size: 1rem;">-</div>
+            <div class="stat-label">최고/최저 체중</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🎢</span>
+            <div class="stat-value" id="dailyVolatilityDisplay" style="font-size: 1rem;">-</div>
+            <div class="stat-label">일일 최대 변동</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🗓️</span>
+            <div class="stat-value" id="weeklyAvgDisplay">-</div>
+            <div class="stat-label">주간 평균 감량</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🌙</span>
+            <div class="stat-value" id="monthCompareDisplay">-</div>
+            <div class="stat-label">지난달 대비 평균</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">💪</span>
+            <div class="stat-value" id="lbmDisplay">-</div>
+            <div class="stat-label">제지방량 (LBM)</div>
+            <div class="stat-sub" id="lbmiDisplay">LBMI: -</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🗓️</span>
+            <div class="stat-value" id="dDayDisplay">-</div>
+            <div class="stat-label">챌린지 경과일</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🍔</span>
+            <div class="stat-value" id="estTdeeDisplay">-</div>
+            <div class="stat-label">예상 TDEE (역산)</div>
+            <div class="stat-sub" id="estTdeeSubDisplay" style="font-size:0.65rem;">(섭취 2000kcal 가정)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">📉</span>
+            <div class="stat-value" id="weeklyEffDisplay">-</div>
+            <div class="stat-label">주간 효율 (Avg)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🌡️</span>
+            <div class="stat-value" id="shortTrendDisplay">-</div>
+            <div class="stat-label">최근 3일 변동</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">💧</span>
+            <div class="stat-value" id="waterIndexDisplay">-</div>
+            <div class="stat-label">수분/변동성 지수</div>
+            <div class="stat-sub" style="font-size:0.65rem;">(오늘 vs 7일 평균)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🥩</span>
+            <div class="stat-value" id="netChangeDisplay">-</div>
+            <div class="stat-label">지방/체지방 변화</div>
+            <div class="stat-sub" id="netChangeSubDisplay" style="font-size:0.65rem;">-</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">📅</span>
+            <div class="stat-value" id="consistencyDisplay">-</div>
+            <div class="stat-label">기록 성실도 (30일)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🍔</span>
+            <div class="stat-value" id="deficitDisplay">-</div>
+            <div class="stat-label">권장 칼로리 컷</div>
+            <div class="stat-sub" style="font-size:0.65rem;">(목표 3개월 컷 기준)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">📉</span>
+            <div class="stat-value" id="ffmiDisplay">-</div>
+            <div class="stat-label">FFMI (근육비만도)</div>
+        </div>
+        <!-- 새로운 지표 추가 -->
+        <div class="stat-card">
+            <span class="stat-icon">📉</span>
+            <div class="stat-value" id="maDisparityDisplay">-</div>
+            <div class="stat-label">이동평균 괴리율</div>
+            <div class="stat-sub">(7일 이동평균 대비)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🥊</span>
+            <div class="stat-value" id="weightClassDisplay">-</div>
+            <div class="stat-label">현재 체급 (Boxing)</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">⏳</span>
+            <div class="stat-value" id="recoveryScoreDisplay">-</div>
+            <div class="stat-label">회복 탄력성</div>
+            <div class="stat-sub">(증량 후 복구 평균일)</div>
+        </div>
+    </div>
+
+    <!-- 메인 차트 영역 -->
+    <div class="card">
+        <h3>📈 체중 변화 그래프 (시계열) <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+        <div class="filter-row">
+            <div class="filter-group">
+                <button class="filter-btn" id="btn-1m" onclick="App.setChartFilter('1M')">1개월</button>
+                <button class="filter-btn" id="btn-3m" onclick="App.setChartFilter('3M')">3개월</button>
+                <button class="filter-btn" id="btn-6m" onclick="App.setChartFilter('6M')">6개월</button>
+                <button class="filter-btn" id="btn-1y" onclick="App.setChartFilter('1Y')">1년</button>
+                <button class="filter-btn" id="btn-all" onclick="App.setChartFilter('ALL')">전체</button>
+            </div>
+            <div class="date-range-picker">
+                <input type="date" id="chartStartDate" onchange="App.applyCustomDateRange()">
+                <span>~</span>
+                <input type="date" id="chartEndDate" onchange="App.applyCustomDateRange()">
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="mainChart"></canvas>
+        </div>
+        <div style="text-align: center; margin-top: 10px; font-size: 0.85rem; color: var(--text-light);">
+            <label><input type="checkbox" id="showTrend" checked onchange="App.updateMainChart()"> 7일 이동평균선(추세) 및 볼린저 밴드 표시</label>
+            <span style="margin-left:15px;">※ 배경색 띠는 BMI 구간(정상/비만 전 단계/비만)을 나타냅니다.</span>
+        </div>
+    </div>
+
+    <!-- 추가 분석 차트 -->
+    <div class="analysis-grid">
+        <!-- 새로운 그래프 1: 고스트 러너 -->
+        <div class="card">
+            <h3>👻 고스트 러너 (전월 대비 비교) <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="ghostRunnerChart"></canvas>
+            </div>
+            <p style="font-size: 0.75rem; text-align: center; color: var(--text-light); margin-top:5px;">현재 달과 지난달의 기록을 일자별로 겹쳐서 비교합니다.</p>
+        </div>
+        <!-- 새로운 그래프 2: 신호등 게이지 -->
+		<div class="card">
+			<h3>🚦 신호등 게이지 (BMI & 체지방) <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+			<div class="gauge-container" style="display: flex; gap: 10px; height: 130px; justify-content: center; align-items: flex-end; overflow: hidden; transition: height 0.3s;">
+				<div class="gauge-wrapper" style="flex: 1; max-width: 150px; position: relative; height: 100%;"><canvas id="gaugeBmiChart"></canvas></div>
+				<div class="gauge-wrapper" style="flex: 1; max-width: 150px; position: relative; height: 100%;"><canvas id="gaugeFatChart"></canvas></div>
+			</div>
+			<div style="display: flex; justify-content: space-around; font-size: 0.85rem; font-weight: bold; margin-top: 5px; max-width: 320px; margin-left: auto; margin-right: auto; color: var(--text-light);">
+				<span>BMI</span> <span>체지방률</span>
+			</div>
+		</div>
+        <div class="card">
+            <h3>📉 누적 감량 추이 (Area) <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="cumulativeChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h3>📊 월별 순수 변화량 <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="monthlyChangeChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h3>🥩 체지방률 추이 <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="bodyFatChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h3>🌑 체중 vs 체지방 (상관관계) <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="scatterChart"></canvas>
+            </div>
+            <p style="font-size: 0.75rem; text-align: center; color: var(--text-light);">이상적 흐름: 좌측 하단(↙)으로 이동</p>
+        </div>
+        <div class="card">
+            <h3>📊 주중 vs 주말 변화 비교 <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="weekendChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h3>📊 체성분 누적 영역 차트 <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="bodyCompStackedChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h3>🕯️ 월별 박스 플롯 (변동폭) <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="monthlyBoxPlotChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h3>🎢 변화 속도 그래프 (Rate of Change) <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="rocChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 캘린더 뷰 -->
+    <div class="card">
+        <h3>📅 월별 기록 흐름 (Calendar View)</h3>
+        <div id="calendarContainer"></div>
+    </div>
+
+    <!-- 상세 분석 영역 -->
+    <div class="analysis-grid">
+        <div class="card">
+            <h3>⚡ 감량 페이스 & 주간 비교</h3>
+            <table class="data-table">
+                <tr><th>구분</th><th>속도 (일평균)</th></tr>
+                <tr><td>최근 7일</td><td id="rate7Days">-</td></tr>
+                <tr><td>최근 30일</td><td id="rate30Days">-</td></tr>
+            </table>
+            <div style="margin-top: 20px; text-align: center;">
+                <h4 style="font-size: 0.9rem; color:var(--text-light); margin-bottom: 5px;">지난주 vs 이번주 (평균 체중)</h4>
+                <div id="weeklyCompareDisplay" style="font-size: 1.3rem; font-weight: bold;">-</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📅 요일별 평균 변화량 <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="dayOfWeekChart"></canvas>
+            </div>
+            <p style="font-size: 0.75rem; text-align: center; color: var(--text-light); margin-top:5px;">막대가 아래(녹색)일수록 살이 잘 빠지는 요일입니다.</p>
+        </div>
+        
+        <div class="card">
+            <h3>📊 체중 구간별 빈도 <button class="expand-btn" onclick="App.toggleChartExpand(this)" title="확대/축소">⛶</button></h3>
+            <div class="mini-chart-container">
+                <canvas id="histogramChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 히트맵 -->
+    <div class="card">
+        <h3>🌿 감량 히트맵 (최근 1년)</h3>
+        <div class="heatmap-container" id="heatmapGrid"></div>
+        <div class="heatmap-legend">
+            <span>증량</span> <div class="legend-box" style="background: var(--heatmap-gain)"></div>
+            <div class="legend-box" style="background: var(--heatmap-empty)"></div>
+            <div class="legend-box" style="background: var(--heatmap-1)"></div>
+            <div class="legend-box" style="background: var(--heatmap-2)"></div>
+            <div class="legend-box" style="background: var(--heatmap-3)"></div>
+            <div class="legend-box" style="background: var(--heatmap-4)"></div> <span>감량 성공</span>
+        </div>
+    </div>
+
+    <!-- 고급 통계 분석 리포트 -->
+    <div class="card">
+        <h3>🧠 심층 분석</h3>
+        <ul class="insight-list" id="advancedAnalysisList">
+            <li class="insight-item">데이터를 수집중입니다...</li>
+        </ul>
+    </div>
+
+    <!-- 🏆 업적 및 뱃지 -->
+    <div class="card">
+        <h3 onclick="App.toggleBadges()" style="cursor:pointer;">🏆 나의 업적 & 뱃지 <span style="font-size:0.8rem; color:var(--text-light);">(클릭하여 접기/펼치기)</span></h3>
+        <div id="badgeGrid" class="badge-grid" style="display:grid;">
+            <!-- JS로 렌더링 됩니다 -->
+        </div>
+    </div>
+
+    <!-- 데이터 테이블 탭 (Sticky Header 적용됨) -->
+    <div class="card">
+        <h3>📑 상세 리포트 & 기록</h3>
+        <div class="filter-row">
+            <div class="filter-group">
+                <button class="filter-btn active" id="tab-btn-monthly" onclick="App.switchTab('tab-monthly')">월별 결산</button>
+                <button class="filter-btn" id="tab-btn-weekly" onclick="App.switchTab('tab-weekly')">주별 결산</button>
+                <button class="filter-btn" id="tab-btn-milestone" onclick="App.switchTab('tab-milestone')">마일스톤</button>
+                <button class="filter-btn" id="tab-btn-history" onclick="App.switchTab('tab-history')">전체 기록</button>
+            </div>
+        </div>
+
+        <!-- 탭 내용 -->
+        <div id="tab-monthly" class="tab-content">
+            <table class="data-table">
+                <thead><tr><th>월</th><th>시작</th><th>종료</th><th>변화량</th><th>평균</th></tr></thead>
+                <tbody id="monthlyTableBody"></tbody>
+            </table>
+        </div>
+        <div id="tab-weekly" class="tab-content" style="display:none;">
+            <table class="data-table">
+                <thead><tr><th>주차 (시작일)</th><th>평균 체중</th><th>변화</th></tr></thead>
+                <tbody id="weeklyTableBody"></tbody>
+            </table>
+        </div>
+        <div id="tab-milestone" class="tab-content" style="display:none;">
+            <table class="data-table">
+                <thead><tr><th>달성 목표</th><th>달성일</th><th>소요 기간</th></tr></thead>
+                <tbody id="milestoneTableBody"></tbody>
+            </table>
+        </div>
+        <!-- Sticky Header 적용 및 이벤트 위임용 ID 추가 -->
+        <div id="tab-history" class="tab-content" style="display:none; max-height: 400px; overflow-y: auto;">
+            <table class="data-table">
+                <thead><tr><th>날짜</th><th>체중</th><th>체지방</th><th>변화</th><th>관리</th></tr></thead>
+                <tbody id="historyList"></tbody>
+            </table>
+        </div>
+    </div>
+	
+	<footer style="margin-top: 40px; padding: 20px 10px; border-top: 1px solid var(--input-border); color: var(--text-light); font-size: 0.9rem; line-height: 1.6;">
+        <!-- 면책 조항 및 정보 -->
+        <div style="margin-bottom: 20px;">
+            <strong style="color: var(--text); font-size: 1.1rem;">⚠️ 면책 조항 (Disclaimer)</strong><br>
+            본 서비스에서 제공하는 모든 지표, 통계, 그래프, 예측 시뮬레이션 및 제안은 일반적인 공식을 기반으로 한 단순 정보 제공 및 건강 관리 보조 목적이며, 전문적인 의학적 진단, 소견, 치료를 대체할 수 없습니다. 개인의 신체적 특성, 기저 질환, 대사량 차이에 따라 실제 결과는 상이할 수 있습니다. 무리한 체중 감량이나 급격한 식단 변경, 운동 계획 수립 전 반드시 의사, 임상영양사 등 의료 전문가와 상담하시기 바랍니다. 제공자는 본 데이터의 활용으로 인해 발생한 건강상의 문제나 결과에 대해 법적 책임을 지지 않습니다.
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <strong style="color: var(--text); font-size: 1.1rem;">ℹ️ 참고용 데이터</strong><br>
+            제공되는 모든 분석 결과와 수치는 의학적 조언이 아니며, 개인의 건강 상태에 따라 다를 수 있습니다. 이 데이터는 참고용으로만 활용하시고, 정확한 진단과 처방은 반드시 전문 의료진과 상의하십시오.
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <strong style="color: var(--text); font-size: 1.1rem;">🚫 의학적 책임의 부인</strong><br>
+            본 프로그램은 의료 기기가 아니며, 산출된 BMI, TDEE, 예상 감량일 등의 데이터는 통계적 추정치일 뿐 과학적 정밀성을 보증하지 않습니다. 본 정보는 사용자의 독자적인 판단 하에 참고용으로만 이용되어야 하며, 이를 근거로 한 자가 진단이나 치료 행위로 인한 직·간접적인 손해에 대해 개발자는 어떠한 민·형사상 책임도 지지 않습니다. 건강 관련 결정은 반드시 전문의의 조언을 따르십시오.
+        </div>
+        
+        <div>
+            <strong style="color: var(--text); font-size: 1.1rem;">💾 데이터 저장 및 프라이버시</strong><br>
+            본 서비스는 별도의 서버 없이 <strong>사용자의 브라우저(로컬 스토리지)</strong>에만 데이터를 저장합니다. 브라우저의 <strong>'쿠키 및 사이트 데이터' 삭제</strong>, 시크릿 모드 사용, 또는 브라우저 앱 삭제 시 데이터가 영구적으로 유실될 수 있습니다. 설정 메뉴의 <strong>[JSON 백업]</strong> 기능을 이용해 주기적으로 데이터를 별도 보관하시기 바랍니다.
+        </div>
+    </footer>
+	
+    <!-- Chart Backdrop -->
+    <div id="chartBackdrop" class="chart-backdrop" onclick="App.closeAllExpands()"></div>
+    
+    <!-- Toast Message Container -->
+    <div id="toast-container" class="toast-container"></div>
+</div>
+
+<script src="diet_challenge.js"></script>
 </body>
 </html>
