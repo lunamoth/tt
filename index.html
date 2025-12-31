@@ -371,6 +371,12 @@
         }
 
         .buttons-group { display: flex; gap: 8px; }
+		
+		.buttons-group button {
+		font-size: 0.7rem;
+		padding: 0 10px;
+		height: 30px;
+		}
 
         .char-count { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; }
         #twitterCount, #bskyCount { font-size: 0.75rem; font-weight: 600; margin-top: 4px; }
@@ -702,7 +708,7 @@
                         <input type="file" id="fileInput" hidden accept=".txt,text/plain">
                         <button class="file-btn" id="btn-file">📂 파일 <span class="kbd-hint">Ctrl+O</span></button>
                         <button class="reset-btn" id="btn-reset">🔄 초기화 <span class="kbd-hint">Alt+Del</span></button>
-                        <button class="split-btn" id="btn-split">자르기 ⚡️ (Ctrl + Enter)</button>
+                        <button class="split-btn" id="btn-split">자르기 ⚡️ <span class="kbd-hint">Ctrl+Enter</span></button>
                     </div>
                 </div>
             </div>
