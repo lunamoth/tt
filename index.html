@@ -743,7 +743,7 @@
 
             // 1. 상수 및 설정 관리
             const CONFIG = {
-                VERSION: "타래 재단사 7.7 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 7.8 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1364,12 +1364,25 @@
                         this.debounceProcess();
                     });
 
-                    this.dom.inputText.addEventListener('input', (e) => {
-                        this.updateCount(e.target.value);
-                        this.saveDraft(e.target.value);
-                        this.debounceProcess();
-                    });
+					this.dom.inputText.addEventListener('input', (e) => {
+						this.updateCount(e.target.value);
+						this.saveDraft(e.target.value);
 
+						// inputType이 'insertFromPaste'이면 붙여넣기 동작입니다.
+						if (e.inputType === 'insertFromPaste') {
+							// 기존 타이머 취소 (중복 실행 방지)
+							if (this.debounceTimer) clearTimeout(this.debounceTimer);
+							
+							// 설정을 동기화하고, '자동 모드(true)'가 아닌 '수동 모드(false)'로 실행
+							// false로 실행하면 자르기 버튼을 누른 것과 똑같이 인식되어 복사가 수행됩니다.
+							this.syncSettingsFromDOM();
+							this.processText(false); 
+						} else {
+							// 붙여넣기가 아니면(그냥 타이핑 등) 기존처럼 미리보기만 갱신
+							this.debounceProcess();
+						}
+					});
+					
                     this.dom.btnReset.addEventListener('click', () => this.resetAll());
                     this.dom.btnSplit.addEventListener('click', () => this.processText(false));
 
