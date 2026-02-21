@@ -20,6 +20,7 @@
             
             /* Sizing */
             --app-base-size: 18px;
+            --button-scale: 1.5;
             --radius-control: 4px;
             --radius-layer: 8px;
             --radius-window: 12px;
@@ -167,8 +168,8 @@
             position: absolute;
             top: 1.5rem;
             right: 2rem;
-            width: 2.25rem;
-            height: 2.25rem;
+            width: calc(2.25rem * var(--button-scale));
+            height: calc(2.25rem * var(--button-scale));
             background: transparent;
             border: none;
             border-radius: var(--radius-control);
@@ -176,7 +177,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: calc(1rem * var(--button-scale));
             color: var(--text-primary);
             transition: background 0.1s;
         }
@@ -222,7 +223,7 @@
 
         .preset-buttons {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
         }
 
@@ -231,17 +232,35 @@
             border: 1px solid var(--stroke-control);
             border-bottom: 1px solid var(--stroke-control);
             border-radius: var(--radius-control);
-            padding: 0.6rem 0.5rem;
-            font-size: 0.8rem;
+            padding: calc(0.45rem * var(--button-scale)) calc(0.35rem * var(--button-scale));
             color: var(--text-primary);
             cursor: pointer;
             transition: all 0.1s;
             display: flex;
-            flex-direction: row; /* Changed to row for single line */
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px; /* Slightly increased gap for row layout */
+            gap: calc(2px * var(--button-scale));
             position: relative;
+            min-width: 0;
+            text-align: center;
+            line-height: 1.15;
+        }
+
+        .preset-btn .preset-title {
+            display: block;
+            font-size: clamp(0.82rem, 1.2vw, calc(0.72rem * var(--button-scale)));
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .preset-btn .preset-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: calc(4px * var(--button-scale));
+            font-size: clamp(0.62rem, 0.85vw, calc(0.46rem * var(--button-scale)));
+            white-space: nowrap;
         }
         
         .preset-btn:hover { background-color: var(--control-fill-hover); }
@@ -265,10 +284,10 @@
         [data-theme="dark"] .preset-btn.active { background-color: rgba(255,255,255,0.08); }
 
         .preset-btn span.limit-badge {
-            font-size: 0.5rem; /* Smaller font for numbers */
+            font-size: inherit;
             color: var(--text-secondary);
             font-weight: 400;
-            margin-top: 1px; /* Visual alignment */
+            margin-top: 0;
         }
 
         /* Keyboard Hint Style */
@@ -366,34 +385,45 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
             margin-bottom: 0.5rem;
             padding-bottom: 0.5rem;
         }
 
-        .buttons-group { display: flex; gap: 8px; }
-		
-		.buttons-group button {
-		font-size: 0.7rem;
-		padding: 0 10px;
-		height: 30px;
-		}
+        .action-area > :first-child {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .buttons-group {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            flex: 2 1 0;
+            min-width: 0;
+        }
+
+        .buttons-group button {
+            padding: calc(0.25rem * var(--button-scale)) calc(0.3rem * var(--button-scale));
+            min-height: calc(34px * var(--button-scale));
+        }
 
         .char-count { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; }
         #twitterCount, #bskyCount { font-size: 0.75rem; font-weight: 600; margin-top: 4px; }
 
         /* WinUI Standard Button */
         button {
-            height: 32px;
+            height: calc(32px * var(--button-scale));
             border-radius: var(--radius-control);
-            padding: 0 16px;
-            font-size: 0.875rem;
+            padding: 0 calc(16px * var(--button-scale));
+            font-size: calc(0.875rem * var(--button-scale));
             font-family: inherit;
             cursor: pointer;
             transition: all 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: calc(8px * var(--button-scale));
             font-weight: 400;
         }
 
@@ -429,11 +459,45 @@
         }
 
         .results-header-actions {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px;
             margin-bottom: 1rem;
         }
         .copy-all-btn, .download-btn { flex: 1; }
+
+        .buttons-group button,
+        .results-header-actions button {
+            height: auto;
+            flex-direction: column;
+            gap: calc(2px * var(--button-scale));
+            text-align: center;
+            line-height: 1.1;
+            min-width: 0;
+            white-space: normal;
+        }
+
+        .results-header-actions button {
+            padding: calc(0.25rem * var(--button-scale)) calc(0.45rem * var(--button-scale));
+            min-height: calc(34px * var(--button-scale));
+        }
+
+        .buttons-group button .btn-title,
+        .results-header-actions button .btn-title {
+            display: block;
+            font-size: clamp(0.82rem, 1.1vw, calc(0.72rem * var(--button-scale)));
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .buttons-group button .btn-meta,
+        .results-header-actions button .btn-meta {
+            display: block;
+            font-size: clamp(0.62rem, 0.85vw, calc(0.46rem * var(--button-scale)));
+            line-height: 1;
+            opacity: 0.82;
+            white-space: nowrap;
+        }
 
         /* Result Cards */
         .results {
@@ -522,22 +586,37 @@
             color: var(--text-primary);
         }
 
-        /* Copy Button inside card (Ghost/Subtle Button) */
+        /* Copy Button inside card (Outlined for clearer affordance) */
         .copy-btn {
             width: 100%;
-            height: 32px;
-            background: transparent;
+            height: calc(32px * var(--button-scale));
+            background: var(--control-fill-secondary);
             color: var(--accent-default);
-            border: none;
+            border: 1px solid var(--stroke-control-strong);
             border-radius: var(--radius-control);
-            font-size: 0.875rem;
+            font-size: calc(0.875rem * var(--button-scale));
             font-weight: 600;
         }
-        .copy-btn:hover { background-color: rgba(0,0,0,0.04); }
-        [data-theme="dark"] .copy-btn:hover { background-color: rgba(255,255,255,0.04); }
+        .copy-btn:hover {
+            background-color: var(--control-fill-hover);
+            border-color: var(--accent-default);
+        }
+        [data-theme="dark"] .copy-btn:hover { background-color: var(--control-fill-hover); }
+        .copy-btn:active { background-color: var(--control-fill-active); }
+        .copy-btn:focus-visible {
+            outline: 2px solid var(--accent-default);
+            outline-offset: 2px;
+        }
         
-        .copy-btn.copied { color: #107c10; background-color: rgba(16, 124, 16, 0.1); }
-        [data-theme="dark"] .copy-btn.copied { color: #6ccb5f; }
+        .copy-btn.copied {
+            color: #107c10;
+            background-color: rgba(16, 124, 16, 0.1);
+            border-color: rgba(16, 124, 16, 0.45);
+        }
+        [data-theme="dark"] .copy-btn.copied {
+            color: #6ccb5f;
+            border-color: rgba(108, 203, 95, 0.55);
+        }
 
         /* Status Bar (Notepad/VSCode style) */
         .status-bar {
@@ -612,8 +691,12 @@
             .status-bar { justify-content: center; flex-wrap: wrap; gap: 10px; height: auto; padding: 8px; }
         }
 		
-		.preset-btn .kbd-hint {
-		font-size: 0.5rem; /* 기존 0.7em 대비 더 작고 명확하게 고정 */
+		.preset-btn .kbd-hint,
+        .buttons-group .kbd-hint,
+        .results-header-actions .kbd-hint {
+		font-size: inherit;
+		margin-left: 0;
+        opacity: 1;
 		}
     </style>
 </head>
@@ -636,13 +719,16 @@
                     <label>✨ 플랫폼 선택 (자동 설정)</label>
                     <div class="preset-buttons" id="presetContainer">
                         <button id="btn-bluesky" class="preset-btn active" data-preset="bluesky">
-                            🦋 블루스카이 <span class="limit-badge">(300자)</span> <span class="kbd-hint">Alt+B</span>
+                            <span class="preset-title">🦋 블루스카이</span>
+                            <span class="preset-meta"><span class="limit-badge">(300자)</span> <span class="kbd-hint">Alt+B</span></span>
                         </button>
                         <button id="btn-twitter" class="preset-btn" data-preset="twitter">
-                            🐦 트위터 <span class="limit-badge">(280자)</span> <span class="kbd-hint">Alt+X</span>
+                            <span class="preset-title">🐦 트위터</span>
+                            <span class="preset-meta"><span class="limit-badge">(280자)</span> <span class="kbd-hint">Alt+X</span></span>
                         </button>
                         <button id="btn-threads" class="preset-btn" data-preset="threads">
-                            🧵 스레드 <span class="limit-badge">(500자)</span> <span class="kbd-hint">Alt+T</span>
+                            <span class="preset-title">🧵 스레드</span>
+                            <span class="preset-meta"><span class="limit-badge">(500자)</span> <span class="kbd-hint">Alt+T</span></span>
                         </button>
                     </div>
                 </div>
@@ -706,9 +792,9 @@
                     </div>
                     <div class="buttons-group">
                         <input type="file" id="fileInput" hidden accept=".txt,text/plain">
-                        <button class="file-btn" id="btn-file">📂 파일 <span class="kbd-hint">Ctrl+O</span></button>
-                        <button class="reset-btn" id="btn-reset">🔄 초기화 <span class="kbd-hint">Alt+Del</span></button>
-                        <button class="split-btn" id="btn-split">자르기 ⚡️ <span class="kbd-hint">Ctrl+Enter</span></button>
+                        <button class="file-btn" id="btn-file"><span class="btn-title">📂 파일</span><span class="btn-meta"><span class="kbd-hint">Ctrl+O</span></span></button>
+                        <button class="reset-btn" id="btn-reset"><span class="btn-title">🔄 초기화</span><span class="btn-meta"><span class="kbd-hint">Alt+Del</span></span></button>
+                        <button class="split-btn" id="btn-split"><span class="btn-title">자르기 ⚡️</span><span class="btn-meta"><span class="kbd-hint">Ctrl+Enter</span></span></button>
                     </div>
                 </div>
             </div>
@@ -743,7 +829,7 @@
 
             // 1. 상수 및 설정 관리
             const CONFIG = {
-                VERSION: "타래 재단사 7.8 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 8.0 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1647,10 +1733,10 @@
                         const actionDiv = DOMHelper.createElement('div', 'results-header-actions');
                         // Added keyboard hints dynamically to these buttons
                         const copyAll = DOMHelper.createElement('button', 'copy-all-btn');
-                        copyAll.innerHTML = `${CONFIG.MESSAGES.COPY_ALL} <span class="kbd-hint">Ctrl+Shift+C</span>`;
+                        copyAll.innerHTML = `<span class="btn-title">${CONFIG.MESSAGES.COPY_ALL}</span><span class="btn-meta"><span class="kbd-hint">Ctrl+Shift+C</span></span>`;
                         
                         const downloadBtn = DOMHelper.createElement('button', 'download-btn');
-                        downloadBtn.innerHTML = `${CONFIG.MESSAGES.SAVE_FILE} <span class="kbd-hint">Ctrl+S</span>`;
+                        downloadBtn.innerHTML = `<span class="btn-title">${CONFIG.MESSAGES.SAVE_FILE}</span><span class="btn-meta"><span class="kbd-hint">Ctrl+S</span></span>`;
                         
                         actionDiv.append(copyAll, downloadBtn);
                         frag.appendChild(actionDiv);
