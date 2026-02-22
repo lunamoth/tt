@@ -427,32 +427,32 @@
             font-weight: 400;
         }
 
-        button.reset-btn, button.file-btn, button.download-btn {
+        button.reset-btn, button.file-btn, button.download-btn, button.copy-all-btn {
             background-color: var(--control-fill-secondary);
             color: var(--text-primary);
             border: 1px solid var(--stroke-control);
             border-bottom: 1px solid var(--stroke-control-strong);
         }
 
-        button.reset-btn:hover, button.file-btn:hover, button.download-btn:hover {
+        button.reset-btn:hover, button.file-btn:hover, button.download-btn:hover, button.copy-all-btn:hover {
             background-color: var(--control-fill-hover);
         }
-        button.reset-btn:active, button.file-btn:active, button.download-btn:active {
+        button.reset-btn:active, button.file-btn:active, button.download-btn:active, button.copy-all-btn:active {
             background-color: var(--control-fill-active);
             color: var(--text-secondary);
             transform: scale(0.98);
         }
 
         /* WinUI Accent Button */
-        button.split-btn, button.copy-all-btn {
+        button.split-btn, .copy-btn {
             background-color: var(--accent-default);
             color: var(--accent-text);
             border: 1px solid transparent; /* Accent buttons usually borderless or same color */
             border-bottom: 1px solid rgba(0,0,0,0.1); 
         }
         
-        button.split-btn:hover, button.copy-all-btn:hover { background-color: var(--accent-hover); }
-        button.split-btn:active, button.copy-all-btn:active { 
+        button.split-btn:hover, .copy-btn:hover { background-color: var(--accent-hover); }
+        button.split-btn:active, .copy-btn:active { 
             background-color: var(--accent-active); 
             color: rgba(255,255,255,0.8);
             transform: scale(0.98);
@@ -586,36 +586,29 @@
             color: var(--text-primary);
         }
 
-        /* Copy Button inside card (Outlined for clearer affordance) */
+        /* Copy Button inside card (Win11 accent button style, size preserved) */
         .copy-btn {
             width: 100%;
             height: calc(32px * var(--button-scale));
-            background: var(--control-fill-secondary);
-            color: var(--accent-default);
-            border: 1px solid var(--stroke-control-strong);
-            border-radius: var(--radius-control);
-            font-size: calc(0.875rem * var(--button-scale));
+            font-size: calc(0.78rem * var(--button-scale));
             font-weight: 600;
         }
-        .copy-btn:hover {
-            background-color: var(--control-fill-hover);
-            border-color: var(--accent-default);
-        }
-        [data-theme="dark"] .copy-btn:hover { background-color: var(--control-fill-hover); }
-        .copy-btn:active { background-color: var(--control-fill-active); }
         .copy-btn:focus-visible {
             outline: 2px solid var(--accent-default);
             outline-offset: 2px;
         }
         
         .copy-btn.copied {
-            color: #107c10;
-            background-color: rgba(16, 124, 16, 0.1);
-            border-color: rgba(16, 124, 16, 0.45);
+            color: #ffffff;
+            background-color: var(--accent-default);
+            border: 1px solid transparent;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
         }
         [data-theme="dark"] .copy-btn.copied {
-            color: #6ccb5f;
-            border-color: rgba(108, 203, 95, 0.55);
+            color: #ffffff;
+            background-color: var(--accent-default);
+            border: 1px solid transparent;
+            border-bottom: 1px solid rgba(0,0,0,0.24);
         }
 
         /* Status Bar (Notepad/VSCode style) */
@@ -820,7 +813,7 @@
         button.reset-btn,
         button.file-btn,
         button.download-btn,
-        .copy-btn {
+        button.copy-all-btn {
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
         }
 
@@ -836,7 +829,7 @@
         }
 
         button.split-btn,
-        button.copy-all-btn {
+        .copy-btn {
             background-image: linear-gradient(180deg, color-mix(in srgb, var(--accent-default) 91%, white 9%), var(--accent-default));
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
@@ -1086,7 +1079,7 @@
 
             // 1. 상수 및 설정 관리
             const CONFIG = {
-                VERSION: "타래 재단사 8.1 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: "타래 재단사 8.2 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
