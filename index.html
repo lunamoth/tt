@@ -6,7 +6,7 @@
 
   <!-- 앱 버전: 앞으로는 아래 값 하나만 변경하면 됩니다. -->
   <script id="app-version-config">
-    const APP_VERSION = '10.6';
+    const APP_VERSION = '10.7';
   </script>
 
   <meta name="description" content="✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기 + 트위터 검색기">
@@ -1671,6 +1671,75 @@
     #twitter-search-app > .container {
       width: 100%;
       height: 100%;
+    }
+
+    /* 본문 가독성 개선: 탭과 버튼은 유지하고 읽기/입력 텍스트만 한 단계 확대 */
+    #thread-tailor-app textarea {
+      font-size: 1.05rem;
+      line-height: 1.65;
+    }
+
+    #thread-tailor-app .card-content {
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    #thread-tailor-app .empty-state {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    #thread-tailor-app .preset-wrapper label,
+    #thread-tailor-app .input-group label,
+    #thread-tailor-app input[type="number"],
+    #thread-tailor-app input[type="text"],
+    #thread-tailor-app select {
+      font-size: 1rem;
+    }
+
+    #thread-tailor-app input[type="number"],
+    #thread-tailor-app input[type="text"],
+    #thread-tailor-app select {
+      height: 38px;
+    }
+
+    #twitter-search-app .section-title {
+      font-size: 1.05rem;
+    }
+
+    #twitter-search-app .section-description {
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    #twitter-search-app label,
+    #twitter-search-app input[type="search"] {
+      font-size: 1rem;
+    }
+
+    #twitter-search-app input[type="search"] {
+      height: 38px;
+    }
+
+    #twitter-search-app .field-help,
+    #twitter-search-app .storage-status,
+    #twitter-search-app .privacy-note {
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    #twitter-search-app .preview-card-title,
+    #twitter-search-app .preview {
+      font-size: 1rem;
+    }
+
+    #twitter-search-app .preview {
+      line-height: 1.75;
+    }
+
+    #twitter-search-app .preview code {
+      font-size: 0.95rem;
+      line-height: 1.7;
     }
 
   </style>
