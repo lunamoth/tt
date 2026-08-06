@@ -1,22 +1,198 @@
 <!DOCTYPE html>
 <html lang="ko" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data:;">
-    <title>✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기</title>
-    
-    <!-- Pretendard Font for non-Windows platforms to maintain clean look -->
-    <link rel="stylesheet" as="style" crossorigin href="https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.8/static/pretendard.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
+  <!-- 앱 버전: 앞으로는 아래 값 하나만 변경하면 됩니다. -->
+  <script id="app-version-config">
+    const APP_VERSION = '10.0';
+  </script>
+
+  <meta name="description" content="✂️ 타래 재단사 - 긴 글 자르기, 타래 생성기 + 트위터 검색기">
+  <meta name="application-name" content="타래 재단사">
+  <meta name="app-version" content="">
+  <title>✂️ 타래 재단사 - 타래 생성기 + 트위터 검색기</title>
+
+  <script id="app-version-bootstrap">
+    (() => {
+      document.documentElement.dataset.appVersion = APP_VERSION;
+      document.querySelector('meta[name="app-version"]').content = APP_VERSION;
+      document.querySelector('meta[name="description"]').content =
+        `✂️ 타래 재단사 ${APP_VERSION} - 긴 글 자르기, 타래 생성기 + 트위터 검색기`;
+      document.title = `✂️ 타래 재단사 ${APP_VERSION} - 타래 생성기 + 트위터 검색기`;
+    })();
+  </script>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.8/static/pretendard.css">
+
+  <!-- 1. Shared Windows 11 tab shell -->
+  <style id="shell-styles">
+
+    :root {
+      color-scheme: light;
+      --tab-bar-height: 34px;
+      --font-family: 'Segoe UI Variable', 'Segoe UI', 'Pretendard', -apple-system, sans-serif;
+      --shell-fill: #f3f3f3;
+      --shell-header: rgba(255, 255, 255, 0.88);
+      --control-fill-secondary: #f6f6f6;
+      --control-fill-hover: #f0f0f0;
+      --control-fill-active: #e4e4e4;
+      --text-primary: #1b1b1b;
+      --text-secondary: #5d5d5d;
+      --stroke-control: rgba(0, 0, 0, 0.0578);
+      --stroke-control-strong: rgba(0, 0, 0, 0.16);
+      --shell-border: rgba(0, 0, 0, 0.08);
+      --accent-default: #0067c0;
+    }
+
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --shell-fill: #202020;
+      --shell-header: rgba(39, 39, 39, 0.94);
+      --control-fill-secondary: #3a3a3a;
+      --control-fill-hover: #424242;
+      --control-fill-active: #2f2f2f;
+      --text-primary: #ffffff;
+      --text-secondary: #d0d0d0;
+      --stroke-control: rgba(255, 255, 255, 0.0698);
+      --stroke-control-strong: rgba(255, 255, 255, 0.18);
+      --shell-border: rgba(255, 255, 255, 0.1);
+      --accent-default: #4cc2ff;
+    }
+
+    @supports (color: AccentColor) {
+      :root { --accent-default: AccentColor; }
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--shell-fill);
+      color: var(--text-primary);
+      font-family: var(--font-family);
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-rows: var(--tab-bar-height) minmax(0, 1fr);
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      background: var(--shell-fill);
+    }
+
+    .tab-bar {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-bottom: 1px solid var(--shell-border);
+      background: var(--shell-header);
+      backdrop-filter: blur(18px) saturate(120%);
+      user-select: none;
+    }
+
+    .tab-button {
+      position: relative;
+      min-width: 116px;
+      height: 28px;
+      padding: 0 15px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-secondary);
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1;
+      cursor: pointer;
+      transition: background-color 0.1s, color 0.1s, border-color 0.1s, transform 0.1s;
+    }
+
+    .tab-button:hover {
+      border-color: var(--stroke-control);
+      background: var(--control-fill-hover);
+      color: var(--text-primary);
+    }
+
+    .tab-button:active {
+      background: var(--control-fill-active);
+      transform: scale(0.98);
+    }
+
+    .tab-button[aria-selected="true"] {
+      border-color: var(--stroke-control);
+      border-bottom-color: var(--stroke-control-strong);
+      background: var(--control-fill-secondary);
+      color: var(--text-primary);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    }
+
+    .tab-button[aria-selected="true"]::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: -1px;
+      height: 2px;
+      border-radius: 2px 2px 0 0;
+      background: var(--accent-default);
+    }
+
+    .tab-button:focus-visible {
+      outline: 2px solid var(--accent-default);
+      outline-offset: -2px;
+    }
+
+    .tab-panels {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--shell-fill);
+    }
+
+    .tab-panel {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      padding: 0;
+      overflow: hidden;
+      background: var(--shell-fill);
+    }
+
+    .tab-panel[hidden] { display: none; }
+
+    @media (max-width: 520px) {
+      .tab-bar { gap: 3px; padding-inline: 5px; }
+      .tab-button { flex: 1; min-width: 0; padding-inline: 8px; font-size: 12.5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; }
+    }
+  
+  </style>
+
+  <!-- 2. Original Thread Tailor styles, scoped to the real DOM section -->
+  <style id="thread-tailor-styles">
+
         /* 
          * Windows 11 Fluent Design System (WinUI 3) Implementation 
          */
 
-        :root {
+        #thread-tailor-app{
             /* Typography */
-            --font-family: 'Segoe UI Variable', 'Segoe UI', 'Pretendard', -apple-system, sans-serif;
+            --font-family: "Segoe UI Variable", "Segoe UI", "Pretendard", -apple-system, sans-serif;
             
             /* Sizing */
             --app-base-size: 18px;
@@ -55,7 +231,7 @@
             --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.025);
         }
 
-        [data-theme="dark"] {
+        #thread-tailor-app[data-theme="dark"]{
             /* Dark Theme Tokens */
             --mica-bg: #202020;
             --layer-fill: #2c2c2c;
@@ -86,17 +262,17 @@
             --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.13);
         }
 
-        * {
+        #thread-tailor-app *{
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
-        html {
+        #thread-tailor-app{
             font-size: var(--app-base-size);
         }
 
-        body {
+        #thread-tailor-app{
             font-family: var(--font-family);
             background-color: var(--mica-bg);
             color: var(--text-primary);
@@ -111,18 +287,18 @@
         }
 
         /* Custom Scrollbar (Win 11 Style) */
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb {
+        #thread-tailor-app ::-webkit-scrollbar{ width: 10px; height: 10px; }
+        #thread-tailor-app ::-webkit-scrollbar-track{ background: transparent; }
+        #thread-tailor-app ::-webkit-scrollbar-thumb{
             background-color: transparent;
             border-radius: 10px;
             border: 4px solid transparent;
             background-clip: content-box;
             transition: background-color 0.2s;
         }
-        :hover::-webkit-scrollbar-thumb { background-color: var(--text-tertiary); }
+        #thread-tailor-app :hover::-webkit-scrollbar-thumb{ background-color: var(--text-tertiary); }
 
-        .container {
+        #thread-tailor-app .container{
             width: 100%;
             height: 100%;
             display: flex;
@@ -131,18 +307,21 @@
         }
 
         /* Allow selection */
-        .container * { user-select: text; }
-        button, label, select, .preset-btn { user-select: none; }
+        #thread-tailor-app .container *{ user-select: text; }
+        #thread-tailor-app button,
+#thread-tailor-app label,
+#thread-tailor-app select,
+#thread-tailor-app .preset-btn{ user-select: none; }
 
         /* Header Area */
-        header {
+        #thread-tailor-app header{
             padding: 1.5rem 2rem 1rem 2rem;
             display: flex;
             flex-direction: column;
             position: relative;
         }
 
-        h1 {
+        #thread-tailor-app h1{
             font-size: 1.5rem; /* Title Large */
             font-weight: 600;
             color: var(--text-primary);
@@ -150,21 +329,21 @@
             letter-spacing: -0.015em;
         }
 
-        p.subtitle {
+        #thread-tailor-app p.subtitle{
             font-size: 0.875rem; /* Body */
             color: var(--text-secondary);
             font-weight: 400;
         }
 
-        p.subtitle a {
+        #thread-tailor-app p.subtitle a{
             color: var(--accent-default);
             text-decoration: none;
             border-radius: 2px;
         }
-        p.subtitle a:hover { text-decoration: underline; }
+        #thread-tailor-app p.subtitle a:hover{ text-decoration: underline; }
 
         /* Theme Toggle as Command Bar Button */
-        .theme-toggle-btn {
+        #thread-tailor-app .theme-toggle-btn{
             position: absolute;
             top: 1.5rem;
             right: 2rem;
@@ -181,11 +360,11 @@
             color: var(--text-primary);
             transition: background 0.1s;
         }
-        .theme-toggle-btn:hover { background-color: rgba(128, 128, 128, 0.1); }
-        .theme-toggle-btn:active { background-color: rgba(128, 128, 128, 0.2); transform: scale(0.96); }
+        #thread-tailor-app .theme-toggle-btn:hover{ background-color: rgba(128, 128, 128, 0.1); }
+        #thread-tailor-app .theme-toggle-btn:active{ background-color: rgba(128, 128, 128, 0.2); transform: scale(0.96); }
 
         /* Main Content Layout */
-        .layout-wrapper {
+        #thread-tailor-app .layout-wrapper{
             display: flex;
             gap: 16px; /* WinUI standard gap */
             flex: 1;
@@ -193,7 +372,8 @@
             padding: 0 2rem 1rem 2rem;
         }
 
-        .left-panel, .right-panel {
+        #thread-tailor-app .left-panel,
+#thread-tailor-app .right-panel{
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -204,7 +384,7 @@
         }
 
         /* Right Panel mimics a 'Card' or 'Surface' */
-        .right-panel {
+        #thread-tailor-app .right-panel{
             background: var(--layer-fill);
             border: 1px solid var(--stroke-card);
             padding: 1.5rem;
@@ -212,8 +392,8 @@
         }
 
         /* Preset Buttons (Toggle Button Style) */
-        .preset-wrapper { margin-bottom: 1.5rem; }
-        .preset-wrapper label {
+        #thread-tailor-app .preset-wrapper{ margin-bottom: 1.5rem; }
+        #thread-tailor-app .preset-wrapper label{
             display: block;
             font-size: 0.875rem;
             font-weight: 600;
@@ -221,13 +401,13 @@
             margin-bottom: 0.5rem;
         }
 
-        .preset-buttons {
+        #thread-tailor-app .preset-buttons{
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
         }
 
-        .preset-btn {
+        #thread-tailor-app .preset-btn{
             background: var(--control-fill-secondary);
             border: 1px solid var(--stroke-control);
             border-bottom: 1px solid var(--stroke-control);
@@ -247,14 +427,14 @@
             line-height: 1.15;
         }
 
-        .preset-btn .preset-title {
+        #thread-tailor-app .preset-btn .preset-title{
             display: block;
             font-size: clamp(0.82rem, 1.2vw, calc(0.72rem * var(--button-scale)));
             font-weight: 600;
             white-space: nowrap;
         }
 
-        .preset-btn .preset-meta {
+        #thread-tailor-app .preset-btn .preset-meta{
             display: flex;
             align-items: center;
             justify-content: center;
@@ -263,27 +443,27 @@
             white-space: nowrap;
         }
         
-        .preset-btn:hover { background-color: var(--control-fill-hover); }
-        .preset-btn:active { background-color: var(--control-fill-active); transform: scale(0.98); color: var(--text-secondary); }
+        #thread-tailor-app .preset-btn:hover{ background-color: var(--control-fill-hover); }
+        #thread-tailor-app .preset-btn:active{ background-color: var(--control-fill-active); transform: scale(0.98); color: var(--text-secondary); }
 
         /* Active state mimics WinUI ToggleButton:Checked */
-        .preset-btn.active {
+        #thread-tailor-app .preset-btn.active{
             background-color: var(--control-fill-secondary); 
             background-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.02));
             border-color: var(--stroke-control);
             /* WinUI Accent Indicator logic */
         }
-        .preset-btn.active::after {
-            content: '';
+        #thread-tailor-app .preset-btn.active::after{
+            content: "";
             position: absolute;
             bottom: -1px; left: 12px; right: 12px;
             height: 3px;
             background-color: var(--accent-default);
             border-radius: 2px 2px 0 0;
         }
-        [data-theme="dark"] .preset-btn.active { background-color: rgba(255,255,255,0.08); }
+        #thread-tailor-app[data-theme="dark"] .preset-btn.active{ background-color: rgba(255,255,255,0.08); }
 
-        .preset-btn span.limit-badge {
+        #thread-tailor-app .preset-btn span.limit-badge{
             font-size: inherit;
             color: var(--text-secondary);
             font-weight: 400;
@@ -291,26 +471,26 @@
         }
 
         /* Keyboard Hint Style */
-        .kbd-hint {
+        #thread-tailor-app .kbd-hint{
             font-size: 0.7em;
             color: var(--text-tertiary);
             margin-left: 4px;
             font-weight: normal;
             opacity: 0.7;
-            font-family: Consolas, 'Courier New', monospace;
+            font-family: Consolas, "Courier New", monospace;
             display: inline-block;
         }
         
         /* Controls Grid */
-        .controls {
+        #thread-tailor-app .controls{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 16px;
             margin-bottom: 1.5rem;
         }
 
-        .input-group { display: flex; flex-direction: column; }
-        .input-group label {
+        #thread-tailor-app .input-group{ display: flex; flex-direction: column; }
+        #thread-tailor-app .input-group label{
             font-size: 0.875rem;
             color: var(--text-primary);
             margin-bottom: 6px;
@@ -318,9 +498,10 @@
         }
 
         /* WinUI 3 TextBox & ComboBox Style */
-        input[type="number"], 
-        input[type="text"],
-        select, textarea {
+        #thread-tailor-app input[type="number"],
+#thread-tailor-app input[type="text"],
+#thread-tailor-app select,
+#thread-tailor-app textarea{
             font-family: inherit;
             font-size: 0.875rem;
             color: var(--text-primary);
@@ -332,15 +513,21 @@
             transition: background 0.1s, border-color 0.1s;
         }
 
-        input[type="number"], input[type="text"], select { height: 32px; padding: 0 10px; }
+        #thread-tailor-app input[type="number"],
+#thread-tailor-app input[type="text"],
+#thread-tailor-app select{ height: 32px; padding: 0 10px; }
         
         /* WinUI Hover State */
-        input:hover, select:hover, textarea:hover {
+        #thread-tailor-app input:hover,
+#thread-tailor-app select:hover,
+#thread-tailor-app textarea:hover{
             background-color: var(--control-fill-hover);
         }
 
         /* WinUI Focus State (Bottom Accent Bar is simulated via border-bottom) */
-        input:focus, select:focus, textarea:focus {
+        #thread-tailor-app input:focus,
+#thread-tailor-app select:focus,
+#thread-tailor-app textarea:focus{
             background-color: var(--control-fill);
             border-bottom: 2px solid var(--accent-default);
             border-left-color: var(--stroke-control);
@@ -348,7 +535,7 @@
             border-top-color: var(--stroke-control);
         }
 
-        select {
+        #thread-tailor-app select{
             cursor: pointer;
             appearance: none;
             padding-right: 2rem;
@@ -356,15 +543,15 @@
             background-repeat: no-repeat;
             background-position: right 10px center;
         }
-        [data-theme="dark"] select {
+        #thread-tailor-app[data-theme="dark"] select{
             background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
         }
 
-        #customFormatInput { margin-top: 8px; display: none; }
-        #customFormatInput.show { display: block; animation: fadeIn 0.2s; }
+        #thread-tailor-app #tt-customFormatInput{ margin-top: 8px; display: none; }
+        #thread-tailor-app #tt-customFormatInput.show{ display: block; animation: fadeIn 0.2s; }
 
         /* TextArea - The main input */
-        textarea {
+        #thread-tailor-app textarea{
             flex: 1;
             width: 100%;
             min-height: 200px;
@@ -375,13 +562,13 @@
             box-shadow: var(--shadow-card);
         }
         
-        textarea.drag-over {
+        #thread-tailor-app textarea.drag-over{
             background-color: var(--control-fill-secondary);
             border: 2px dashed var(--accent-default);
         }
 
         /* Action Area */
-        .action-area {
+        #thread-tailor-app .action-area{
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -390,12 +577,12 @@
             padding-bottom: 0.5rem;
         }
 
-        .action-area > :first-child {
+        #thread-tailor-app .action-area > :first-child{
             flex: 1 1 0;
             min-width: 0;
         }
 
-        .buttons-group {
+        #thread-tailor-app .buttons-group{
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
@@ -403,16 +590,17 @@
             min-width: 0;
         }
 
-        .buttons-group button {
+        #thread-tailor-app .buttons-group button{
             padding: calc(0.25rem * var(--button-scale)) calc(0.3rem * var(--button-scale));
             min-height: calc(34px * var(--button-scale));
         }
 
-        .char-count { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; }
-        #twitterCount, #bskyCount { font-size: 0.75rem; font-weight: 600; margin-top: 4px; }
+        #thread-tailor-app .char-count{ font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; }
+        #thread-tailor-app #tt-twitterCount,
+#thread-tailor-app #tt-bskyCount{ font-size: 0.75rem; font-weight: 600; margin-top: 4px; }
 
         /* WinUI Standard Button */
-        button {
+        #thread-tailor-app button{
             height: calc(32px * var(--button-scale));
             border-radius: var(--radius-control);
             padding: 0 calc(16px * var(--button-scale));
@@ -427,47 +615,60 @@
             font-weight: 400;
         }
 
-        button.reset-btn, button.file-btn, button.download-btn, button.copy-all-btn {
+        #thread-tailor-app button.reset-btn,
+#thread-tailor-app button.file-btn,
+#thread-tailor-app button.download-btn,
+#thread-tailor-app button.copy-all-btn{
             background-color: var(--control-fill-secondary);
             color: var(--text-primary);
             border: 1px solid var(--stroke-control);
             border-bottom: 1px solid var(--stroke-control-strong);
         }
 
-        button.reset-btn:hover, button.file-btn:hover, button.download-btn:hover, button.copy-all-btn:hover {
+        #thread-tailor-app button.reset-btn:hover,
+#thread-tailor-app button.file-btn:hover,
+#thread-tailor-app button.download-btn:hover,
+#thread-tailor-app button.copy-all-btn:hover{
             background-color: var(--control-fill-hover);
         }
-        button.reset-btn:active, button.file-btn:active, button.download-btn:active, button.copy-all-btn:active {
+        #thread-tailor-app button.reset-btn:active,
+#thread-tailor-app button.file-btn:active,
+#thread-tailor-app button.download-btn:active,
+#thread-tailor-app button.copy-all-btn:active{
             background-color: var(--control-fill-active);
             color: var(--text-secondary);
             transform: scale(0.98);
         }
 
         /* WinUI Accent Button */
-        button.split-btn, .copy-btn {
+        #thread-tailor-app button.split-btn,
+#thread-tailor-app .copy-btn{
             background-color: var(--accent-default);
             color: var(--accent-text);
             border: 1px solid transparent; /* Accent buttons usually borderless or same color */
             border-bottom: 1px solid rgba(0,0,0,0.1); 
         }
         
-        button.split-btn:hover, .copy-btn:hover { background-color: var(--accent-hover); }
-        button.split-btn:active, .copy-btn:active { 
+        #thread-tailor-app button.split-btn:hover,
+#thread-tailor-app .copy-btn:hover{ background-color: var(--accent-hover); }
+        #thread-tailor-app button.split-btn:active,
+#thread-tailor-app .copy-btn:active{ 
             background-color: var(--accent-active); 
             color: rgba(255,255,255,0.8);
             transform: scale(0.98);
         }
 
-        .results-header-actions {
+        #thread-tailor-app .results-header-actions{
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px;
             margin-bottom: 1rem;
         }
-        .copy-all-btn, .download-btn { flex: 1; }
+        #thread-tailor-app .copy-all-btn,
+#thread-tailor-app .download-btn{ flex: 1; }
 
-        .buttons-group button,
-        .results-header-actions button {
+        #thread-tailor-app .buttons-group button,
+#thread-tailor-app .results-header-actions button{
             height: auto;
             flex-direction: column;
             gap: calc(2px * var(--button-scale));
@@ -477,21 +678,21 @@
             white-space: normal;
         }
 
-        .results-header-actions button {
+        #thread-tailor-app .results-header-actions button{
             padding: calc(0.25rem * var(--button-scale)) calc(0.45rem * var(--button-scale));
             min-height: calc(34px * var(--button-scale));
         }
 
-        .buttons-group button .btn-title,
-        .results-header-actions button .btn-title {
+        #thread-tailor-app .buttons-group button .btn-title,
+#thread-tailor-app .results-header-actions button .btn-title{
             display: block;
             font-size: clamp(0.82rem, 1.1vw, calc(0.72rem * var(--button-scale)));
             font-weight: 600;
             white-space: nowrap;
         }
 
-        .buttons-group button .btn-meta,
-        .results-header-actions button .btn-meta {
+        #thread-tailor-app .buttons-group button .btn-meta,
+#thread-tailor-app .results-header-actions button .btn-meta{
             display: block;
             font-size: clamp(0.62rem, 0.85vw, calc(0.46rem * var(--button-scale)));
             line-height: 1;
@@ -500,14 +701,14 @@
         }
 
         /* Result Cards */
-        .results {
+        #thread-tailor-app .results{
             display: flex;
             flex-direction: column;
             gap: 12px;
             padding-bottom: 1rem;
         }
         
-        .empty-state {
+        #thread-tailor-app .empty-state{
             display: flex;
             align-items: center;
             justify-content: center;
@@ -518,7 +719,7 @@
             min-height: 200px;
         }
 
-        .tweet-card {
+        #thread-tailor-app .tweet-card{
             background-color: var(--layer-fill-secondary); /* Slight contrast against card bg */
             border: 1px solid var(--stroke-card);
             border-radius: var(--radius-layer);
@@ -527,21 +728,21 @@
             animation: fadeIn 0.3s cubic-bezier(0,0,0,1);
         }
         /* Dark mode needs differentiation for nested card */
-        [data-theme="dark"] .tweet-card {
+        #thread-tailor-app[data-theme="dark"] .tweet-card{
             background-color: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.05);
         }
         
-        .tweet-card.warning { border: 1px solid #fce100; }
+        #thread-tailor-app .tweet-card.warning{ border: 1px solid #fce100; }
 
-        .mockup-header {
+        #thread-tailor-app .mockup-header{
             display: flex;
             align-items: center;
             margin-bottom: 12px;
             gap: 12px;
         }
 
-        .mockup-avatar {
+        #thread-tailor-app .mockup-avatar{
             width: 36px; height: 36px;
             border-radius: 50%;
             background-color: var(--control-fill);
@@ -552,11 +753,11 @@
             border: 1px solid var(--stroke-control);
         }
 
-        .mockup-info { display: flex; flex-direction: column; }
-        .mockup-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
-        .mockup-handle { font-size: 0.8rem; color: var(--text-secondary); }
+        #thread-tailor-app .mockup-info{ display: flex; flex-direction: column; }
+        #thread-tailor-app .mockup-name{ font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
+        #thread-tailor-app .mockup-handle{ font-size: 0.8rem; color: var(--text-secondary); }
 
-        .card-meta-header {
+        #thread-tailor-app .card-meta-header{
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -565,7 +766,7 @@
             border-bottom: 1px solid var(--stroke-control);
         }
 
-        .badge {
+        #thread-tailor-app .badge{
             background-color: rgba(16, 124, 16, 0.1);
             color: #107c10;
             padding: 2px 8px;
@@ -573,11 +774,11 @@
             font-size: 0.75rem;
             font-weight: 600;
         }
-        [data-theme="dark"] .badge { color: #6ccb5f; background-color: rgba(108, 203, 95, 0.15); }
-        .badge.warn { background-color: rgba(255, 185, 0, 0.15); color: #8a6d0b; }
-        [data-theme="dark"] .badge.warn { color: #ffd337; }
+        #thread-tailor-app[data-theme="dark"] .badge{ color: #6ccb5f; background-color: rgba(108, 203, 95, 0.15); }
+        #thread-tailor-app .badge.warn{ background-color: rgba(255, 185, 0, 0.15); color: #8a6d0b; }
+        #thread-tailor-app[data-theme="dark"] .badge.warn{ color: #ffd337; }
 
-        .card-content {
+        #thread-tailor-app .card-content{
             font-size: 0.95rem;
             line-height: 1.6;
             white-space: pre-wrap;
@@ -587,24 +788,24 @@
         }
 
         /* Copy Button inside card (Win11 accent button style, size preserved) */
-        .copy-btn {
+        #thread-tailor-app .copy-btn{
             width: 100%;
             height: calc(32px * var(--button-scale));
             font-size: calc(0.78rem * var(--button-scale));
             font-weight: 600;
         }
-        .copy-btn:focus-visible {
+        #thread-tailor-app .copy-btn:focus-visible{
             outline: 2px solid var(--accent-default);
             outline-offset: 2px;
         }
         
-        .copy-btn.copied {
+        #thread-tailor-app .copy-btn.copied{
             color: #ffffff;
             background-color: var(--accent-default);
             border: 1px solid transparent;
             border-bottom: 1px solid rgba(0,0,0,0.1);
         }
-        [data-theme="dark"] .copy-btn.copied {
+        #thread-tailor-app[data-theme="dark"] .copy-btn.copied{
             color: #ffffff;
             background-color: var(--accent-default);
             border: 1px solid transparent;
@@ -612,7 +813,7 @@
         }
 
         /* Status Bar (Notepad/VSCode style) */
-        .status-bar {
+        #thread-tailor-app .status-bar{
             background: var(--mica-bg); /* Match window bg */
             padding: 4px 2rem;
             border-top: 1px solid rgba(0,0,0,0.05); /* Very subtle separator */
@@ -626,11 +827,11 @@
             align-items: center;
         }
 
-        .status-item { display: flex; align-items: center; gap: 6px; }
-        .status-item span { color: var(--text-primary); }
+        #thread-tailor-app .status-item{ display: flex; align-items: center; gap: 6px; }
+        #thread-tailor-app .status-item span{ color: var(--text-primary); }
 
         /* Toast (Teaching Tip / Notification style) */
-        #toast {
+        #thread-tailor-app #tt-toast{
             visibility: hidden;
             min-width: 300px;
             background-color: var(--layer-fill); /* Acrylic usually, but solid for web */
@@ -655,8 +856,8 @@
         }
         
         /* WinUI colored accent bar on left */
-        #toast::before {
-            content: '';
+        #thread-tailor-app #tt-toast::before{
+            content: "";
             position: absolute;
             left: 6px; top: 12px; bottom: 12px;
             width: 3px;
@@ -664,7 +865,7 @@
             border-radius: 2px;
         }
 
-        #toast.show {
+        #thread-tailor-app #tt-toast.show{
             visibility: visible;
             opacity: 1;
             transform: translateX(-50%) translateY(0);
@@ -676,7 +877,7 @@
         }
 
         /* Win11 shell refinement (full-size layout) */
-        :root {
+        #thread-tailor-app{
             --app-base-size: 18px;
             --button-scale: 1.5;
             --radius-control: 4px;
@@ -689,7 +890,7 @@
             --shell-border: rgba(0, 0, 0, 0.08);
         }
 
-        [data-theme="dark"] {
+        #thread-tailor-app[data-theme="dark"]{
             --shell-fill: #202020;
             --shell-header: rgba(39, 39, 39, 0.9);
             --pane-fill: rgba(45, 45, 45, 0.86);
@@ -698,14 +899,14 @@
         }
 
         @supports (color: AccentColor) {
-            :root {
+            #thread-tailor-app{
                 --accent-default: AccentColor;
                 --accent-hover: color-mix(in srgb, AccentColor 90%, white 10%);
                 --accent-active: color-mix(in srgb, AccentColor 84%, black 16%);
             }
         }
 
-        body {
+        #thread-tailor-app{
             padding: 0;
             align-items: stretch;
             justify-content: stretch;
@@ -715,7 +916,7 @@
                 var(--shell-fill);
         }
 
-        .container {
+        #thread-tailor-app .container{
             width: 100%;
             height: 100%;
             margin: 0;
@@ -729,7 +930,7 @@
             position: relative;
         }
 
-        .container::before {
+        #thread-tailor-app .container::before{
             content: "";
             position: absolute;
             inset: 0;
@@ -738,27 +939,27 @@
             mix-blend-mode: soft-light;
         }
 
-        header {
+        #thread-tailor-app header{
             background: var(--shell-header);
             border-bottom: 1px solid var(--shell-border);
             padding: 1.1rem 1.4rem 0.9rem 1.4rem;
             gap: 0;
         }
 
-        h1 {
+        #thread-tailor-app h1{
             font-size: 1.42rem;
             letter-spacing: -0.012em;
             margin-bottom: 0.24rem;
             padding-right: 56px;
         }
 
-        p.subtitle {
+        #thread-tailor-app p.subtitle{
             font-size: 0.86rem;
             line-height: 1.45;
             padding-right: 56px;
         }
 
-        .theme-toggle-btn {
+        #thread-tailor-app .theme-toggle-btn{
             position: absolute;
             top: 1.5rem;
             right: 2rem;
@@ -776,22 +977,22 @@
             transition: background 0.1s;
         }
 
-        .theme-toggle-btn:hover {
+        #thread-tailor-app .theme-toggle-btn:hover{
             background-color: rgba(128, 128, 128, 0.1);
         }
 
-        .theme-toggle-btn:active {
+        #thread-tailor-app .theme-toggle-btn:active{
             background-color: rgba(128, 128, 128, 0.2);
             transform: scale(0.96);
         }
 
-        .layout-wrapper {
+        #thread-tailor-app .layout-wrapper{
             gap: 14px;
             padding: 0.9rem 1.4rem 0.9rem 1.4rem;
         }
 
-        .left-panel,
-        .right-panel {
+        #thread-tailor-app .left-panel,
+#thread-tailor-app .right-panel{
             background: var(--pane-fill);
             border: 1px solid var(--stroke-card);
             border-radius: 12px;
@@ -800,53 +1001,53 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
         }
 
-        [data-theme="dark"] .left-panel,
-        [data-theme="dark"] .right-panel {
+        #thread-tailor-app[data-theme="dark"] .left-panel,
+#thread-tailor-app[data-theme="dark"] .right-panel{
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
-        .right-panel {
+        #thread-tailor-app .right-panel{
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 10px 26px rgba(0, 0, 0, 0.08);
         }
 
-        .preset-btn,
-        button.reset-btn,
-        button.file-btn,
-        button.download-btn,
-        button.copy-all-btn {
+        #thread-tailor-app .preset-btn,
+#thread-tailor-app button.reset-btn,
+#thread-tailor-app button.file-btn,
+#thread-tailor-app button.download-btn,
+#thread-tailor-app button.copy-all-btn{
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
         }
 
-        input[type="number"],
-        input[type="text"],
-        select,
-        textarea {
+        #thread-tailor-app input[type="number"],
+#thread-tailor-app input[type="text"],
+#thread-tailor-app select,
+#thread-tailor-app textarea{
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
         }
 
-        textarea {
+        #thread-tailor-app textarea{
             border-radius: 8px;
         }
 
-        button.split-btn,
-        .copy-btn {
+        #thread-tailor-app button.split-btn,
+#thread-tailor-app .copy-btn{
             background-image: linear-gradient(180deg, color-mix(in srgb, var(--accent-default) 91%, white 9%), var(--accent-default));
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
-        .tweet-card {
+        #thread-tailor-app .tweet-card{
             border-radius: 12px;
             background: linear-gradient(180deg, var(--layer-fill) 0%, var(--layer-fill-secondary) 100%);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
             transition: transform 0.12s ease, box-shadow 0.12s ease;
         }
 
-        .tweet-card:hover {
+        #thread-tailor-app .tweet-card:hover{
             transform: translateY(-1px);
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
         }
 
-        .status-bar {
+        #thread-tailor-app .status-bar{
             background: var(--status-fill);
             border-top: 1px solid var(--shell-border);
             padding: 0.45rem 1.4rem;
@@ -857,7 +1058,7 @@
             backdrop-filter: blur(14px);
         }
 
-        .status-item {
+        #thread-tailor-app .status-item{
             padding: 0.2rem 0.5rem;
             border-radius: 6px;
             border: 1px solid var(--stroke-control);
@@ -865,7 +1066,7 @@
             font-size: 0.73rem;
         }
 
-        #toast {
+        #thread-tailor-app #tt-toast{
             min-width: 320px;
             left: auto;
             right: 18px;
@@ -877,29 +1078,29 @@
             backdrop-filter: blur(20px) saturate(120%);
         }
 
-        #toast.show {
+        #thread-tailor-app #tt-toast.show{
             transform: translateY(0);
         }
 
-        button:focus-visible,
-        input:focus-visible,
-        select:focus-visible,
-        textarea:focus-visible,
-        .preset-btn:focus-visible {
+        #thread-tailor-app button:focus-visible,
+#thread-tailor-app input:focus-visible,
+#thread-tailor-app select:focus-visible,
+#thread-tailor-app textarea:focus-visible,
+#thread-tailor-app .preset-btn:focus-visible{
             outline: 2px solid var(--accent-default);
             outline-offset: 2px;
         }
 
-        .preset-btn .kbd-hint,
-        .buttons-group .kbd-hint,
-        .results-header-actions .kbd-hint {
+        #thread-tailor-app .preset-btn .kbd-hint,
+#thread-tailor-app .buttons-group .kbd-hint,
+#thread-tailor-app .results-header-actions .kbd-hint{
             font-size: inherit;
             margin-left: 0;
             opacity: 0.9;
         }
 
         @media (max-width: 1100px) {
-            .layout-wrapper {
+            #thread-tailor-app .layout-wrapper{
                 flex-direction: column;
                 overflow: visible;
                 padding: 0.8rem 1rem 0.9rem 1rem;
@@ -907,31 +1108,31 @@
         }
 
         @media (max-width: 768px) {
-            header {
+            #thread-tailor-app header{
                 padding: 0.95rem 1rem 0.85rem 1rem;
             }
 
-            .theme-toggle-btn {
+            #thread-tailor-app .theme-toggle-btn{
                 right: 1rem;
             }
 
-            h1,
-            p.subtitle {
+            #thread-tailor-app h1,
+#thread-tailor-app p.subtitle{
                 padding-right: 48px;
             }
 
-            .left-panel,
-            .right-panel {
+            #thread-tailor-app .left-panel,
+#thread-tailor-app .right-panel{
                 overflow: visible;
                 padding: 0.9rem;
                 padding-right: 0.9rem;
             }
 
-            .status-bar {
+            #thread-tailor-app .status-bar{
                 justify-content: center;
             }
 
-            #toast {
+            #thread-tailor-app #tt-toast{
                 right: 10px;
                 left: 10px;
                 min-width: 0;
@@ -939,147 +1140,816 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
+            #thread-tailor-app *,
+#thread-tailor-app *::before,
+#thread-tailor-app *::after{
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
                 scroll-behavior: auto !important;
             }
         }
-    </style>
+    
+  </style>
+
+  <!-- 3. Original Twitter Search styles, scoped to the real DOM section -->
+  <style id="twitter-search-styles">
+
+    #twitter-search-app{
+      --font-family: "Segoe UI Variable", "Segoe UI", "Pretendard", -apple-system, sans-serif;
+      --app-base-size: 18px;
+      --button-scale: 1.5;
+      --radius-control: 4px;
+      --radius-layer: 8px;
+      --radius-window: 12px;
+
+      --mica-bg: #f3f3f3;
+      --layer-fill: #ffffff;
+      --layer-fill-secondary: #f9f9f9;
+      --text-primary: #1b1b1b;
+      --text-secondary: #5d5d5d;
+      --text-tertiary: #838383;
+      --text-disabled: #a6a6a6;
+      --accent-default: #0067c0;
+      --accent-hover: #1975c5;
+      --accent-active: #2b88d8;
+      --accent-text: #ffffff;
+      --control-fill: #ffffff;
+      --control-fill-secondary: #f6f6f6;
+      --control-fill-hover: #f0f0f0;
+      --control-fill-active: #e4e4e4;
+      --stroke-card: rgba(0, 0, 0, 0.0578);
+      --stroke-control: rgba(0, 0, 0, 0.0578);
+      --stroke-control-strong: rgba(0, 0, 0, 0.4458);
+      --focus-stroke: #1a1a1a;
+      --shadow-flyout: 0 8px 16px rgba(0, 0, 0, 0.14);
+      --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.025);
+      --shell-fill: #f3f3f3;
+      --shell-header: rgba(255, 255, 255, 0.78);
+      --pane-fill: rgba(255, 255, 255, 0.76);
+      --status-fill: rgba(255, 255, 255, 0.84);
+      --shell-border: rgba(0, 0, 0, 0.08);
+      --success: #107c10;
+      --success-soft: rgba(16, 124, 16, 0.1);
+      --danger: #c42b1c;
+      --danger-soft: rgba(196, 43, 28, 0.1);
+    }
+
+    #twitter-search-app[data-theme="dark"]{
+      --mica-bg: #202020;
+      --layer-fill: #2c2c2c;
+      --layer-fill-secondary: #323232;
+      --text-primary: #ffffff;
+      --text-secondary: #d0d0d0;
+      --text-tertiary: #9d9d9d;
+      --text-disabled: #5c5c5c;
+      --accent-default: #4cc2ff;
+      --accent-hover: #4cc2ff;
+      --accent-active: #3aa0d9;
+      --accent-text: #000000;
+      --control-fill: #333333;
+      --control-fill-secondary: #3a3a3a;
+      --control-fill-hover: #424242;
+      --control-fill-active: #2f2f2f;
+      --stroke-card: rgba(0, 0, 0, 0.2);
+      --stroke-control: rgba(255, 255, 255, 0.0698);
+      --stroke-control-strong: rgba(255, 255, 255, 0.5442);
+      --focus-stroke: #ffffff;
+      --shadow-flyout: 0 8px 16px rgba(0, 0, 0, 0.26);
+      --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.13);
+      --shell-fill: #202020;
+      --shell-header: rgba(39, 39, 39, 0.9);
+      --pane-fill: rgba(45, 45, 45, 0.86);
+      --status-fill: rgba(32, 32, 32, 0.92);
+      --shell-border: rgba(255, 255, 255, 0.1);
+      --success: #6ccb5f;
+      --success-soft: rgba(108, 203, 95, 0.15);
+      --danger: #ff99a4;
+      --danger-soft: rgba(255, 99, 99, 0.13);
+    }
+
+    @supports (color: AccentColor) {
+      #twitter-search-app{
+        --accent-default: AccentColor;
+        --accent-hover: color-mix(in srgb, AccentColor 90%, white 10%);
+        --accent-active: color-mix(in srgb, AccentColor 84%, black 16%);
+      }
+    }
+
+    #twitter-search-app *{ box-sizing: border-box; margin: 0; padding: 0; }
+    #twitter-search-app{ font-size: var(--app-base-size); }
+
+    #twitter-search-app{
+      font-family: var(--font-family);
+      color: var(--text-primary);
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 10% 16%, rgba(73, 132, 255, 0.12), transparent 42%),
+        radial-gradient(circle at 88% 84%, rgba(0, 120, 215, 0.11), transparent 44%),
+        var(--shell-fill);
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    #twitter-search-app ::-webkit-scrollbar{ width: 10px; height: 10px; }
+    #twitter-search-app ::-webkit-scrollbar-track{ background: transparent; }
+    #twitter-search-app ::-webkit-scrollbar-thumb{
+      background-color: transparent;
+      border-radius: 10px;
+      border: 4px solid transparent;
+      background-clip: content-box;
+      transition: background-color 0.2s;
+    }
+    #twitter-search-app :hover::-webkit-scrollbar-thumb{ background-color: var(--text-tertiary); }
+
+    #twitter-search-app .container{
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--shell-border);
+      border-bottom: 1px solid var(--shell-border);
+      background: var(--shell-fill);
+      overflow: hidden;
+      position: relative;
+    }
+
+    #twitter-search-app .container::before{
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 32%);
+      mix-blend-mode: soft-light;
+    }
+
+    #twitter-search-app .container *{ user-select: text; }
+    #twitter-search-app button,
+#twitter-search-app label{ user-select: none; }
+
+    #twitter-search-app header{
+      flex-shrink: 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 1.1rem 1.4rem 0.9rem;
+      background: var(--shell-header);
+      border-bottom: 1px solid var(--shell-border);
+      backdrop-filter: blur(18px) saturate(120%);
+    }
+
+    #twitter-search-app h1{
+      margin: 0 0 0.24rem;
+      padding-right: 56px;
+      color: var(--text-primary);
+      font-size: 1.42rem;
+      font-weight: 600;
+      letter-spacing: -0.012em;
+    }
+
+    #twitter-search-app .subtitle{
+      margin: 0;
+      padding-right: 56px;
+      color: var(--text-secondary);
+      font-size: 0.86rem;
+      font-weight: 400;
+      line-height: 1.45;
+    }
+
+    #twitter-search-app .theme-toggle-btn{
+      position: absolute;
+      top: 1.5rem;
+      right: 2rem;
+      width: calc(2.25rem * var(--button-scale));
+      height: calc(2.25rem * var(--button-scale));
+      padding: 0;
+      border: none;
+      border-radius: var(--radius-control);
+      background: transparent;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: calc(1rem * var(--button-scale));
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s;
+    }
+    #twitter-search-app .theme-toggle-btn:hover{ background-color: rgba(128, 128, 128, 0.1); }
+    #twitter-search-app .theme-toggle-btn:active{ background-color: rgba(128, 128, 128, 0.2); transform: scale(0.96); }
+
+    #twitter-search-app .layout-wrapper{
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      gap: 14px;
+      overflow: hidden;
+      padding: 0.9rem 1.4rem;
+    }
+
+    #twitter-search-app .left-panel,
+#twitter-search-app .right-panel{
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      padding: 1rem;
+      border: 1px solid var(--stroke-card);
+      border-radius: 12px;
+      background: var(--pane-fill);
+      backdrop-filter: blur(18px) saturate(120%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    }
+
+    #twitter-search-app .left-panel{
+      display: flex;
+      flex-direction: column;
+    }
+
+    #twitter-search-app .right-panel{
+      display: flex;
+      flex-direction: column;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 10px 26px rgba(0, 0, 0, 0.08);
+    }
+
+    #twitter-search-app[data-theme="dark"] .left-panel,
+#twitter-search-app[data-theme="dark"] .right-panel{
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    #twitter-search-app .section-title{
+      margin-bottom: 0.35rem;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    #twitter-search-app .section-description{
+      margin-bottom: 1.25rem;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      line-height: 1.55;
+    }
+
+    #twitter-search-app form{
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    #twitter-search-app .field-group{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #twitter-search-app label{
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-weight: 400;
+    }
+
+    #twitter-search-app .field-help{
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+
+    #twitter-search-app input[type="search"]{
+      width: 100%;
+      height: 32px;
+      min-width: 0;
+      padding: 0 10px;
+      border: 1px solid var(--stroke-control);
+      border-bottom: 1px solid var(--stroke-control-strong);
+      border-radius: var(--radius-control);
+      outline: none;
+      background-color: var(--control-fill);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.875rem;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    #twitter-search-app input[type="search"]:hover{ background-color: var(--control-fill-hover); }
+    #twitter-search-app input[type="search"]:focus{
+      border: 1px solid var(--stroke-control);
+      border-bottom: 2px solid var(--accent-default);
+      background-color: var(--control-fill);
+    }
+    #twitter-search-app input[type="search"]::placeholder{ color: var(--text-tertiary); opacity: 1; }
+
+    #twitter-search-app .author-actions,
+#twitter-search-app .search-actions{
+      display: grid;
+      gap: 8px;
+    }
+    #twitter-search-app .author-actions{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #twitter-search-app .search-actions{ margin-top: auto; grid-template-columns: minmax(0, 1fr); }
+
+    #twitter-search-app button{
+      min-width: 0;
+      height: calc(32px * var(--button-scale));
+      padding: 0 calc(16px * var(--button-scale));
+      border-radius: var(--radius-control);
+      font-family: inherit;
+      font-size: calc(0.875rem * var(--button-scale));
+      font-weight: 400;
+      line-height: 1.1;
+      cursor: pointer;
+      transition: all 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: calc(8px * var(--button-scale));
+      text-align: center;
+    }
+
+    #twitter-search-app .secondary-button,
+#twitter-search-app .delete-button{
+      border: 1px solid var(--stroke-control);
+      border-bottom: 1px solid var(--stroke-control-strong);
+      background-color: var(--control-fill-secondary);
+      color: var(--text-primary);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    }
+    #twitter-search-app .secondary-button:hover,
+#twitter-search-app .delete-button:hover{ background-color: var(--control-fill-hover); }
+    #twitter-search-app .secondary-button:active,
+#twitter-search-app .delete-button:active{ background-color: var(--control-fill-active); color: var(--text-secondary); transform: scale(0.98); }
+
+    #twitter-search-app .primary-button{
+      border: 1px solid transparent;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      background-color: var(--accent-default);
+      background-image: linear-gradient(180deg, color-mix(in srgb, var(--accent-default) 91%, white 9%), var(--accent-default));
+      color: var(--accent-text);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      font-weight: 600;
+    }
+    #twitter-search-app .primary-button:hover{ background-color: var(--accent-hover); }
+    #twitter-search-app .primary-button:active{ background-color: var(--accent-active); transform: scale(0.98); }
+
+    #twitter-search-app .storage-status{
+      min-height: 1.5em;
+      padding: 0 2px;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+    #twitter-search-app .storage-status[data-state="success"]{ color: var(--success); }
+    #twitter-search-app .storage-status[data-state="error"]{ color: var(--danger); }
+
+    #twitter-search-app .preview-card{
+      position: relative;
+      flex: 1;
+      min-height: 190px;
+      padding: 16px;
+      border: 1px solid var(--stroke-card);
+      border-radius: 12px;
+      background: linear-gradient(180deg, var(--layer-fill) 0%, var(--layer-fill-secondary) 100%);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    #twitter-search-app .preview-card:hover{ transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1); }
+
+    #twitter-search-app .preview-card-header{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--stroke-control);
+    }
+
+    #twitter-search-app .preview-card-title{
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    #twitter-search-app .badge{
+      flex-shrink: 0;
+      padding: 2px 8px;
+      border-radius: var(--radius-control);
+      background-color: var(--success-soft);
+      color: var(--success);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    #twitter-search-app .preview{
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+    #twitter-search-app .preview code{
+      display: block;
+      margin-top: 8px;
+      padding: 12px;
+      border: 1px solid var(--stroke-control);
+      border-radius: 8px;
+      background: var(--control-fill-secondary);
+      color: var(--text-primary);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    #twitter-search-app .privacy-note{
+      margin-top: auto;
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--control-fill-secondary);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      line-height: 1.55;
+    }
+
+    #twitter-search-app .status-bar{
+      flex-shrink: 0;
+      min-height: 32px;
+      padding: 0.45rem 1.4rem;
+      border-top: 1px solid var(--shell-border);
+      background: var(--status-fill);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      backdrop-filter: blur(14px);
+    }
+
+    #twitter-search-app .status-item{
+      padding: 0.2rem 0.5rem;
+      border: 1px solid var(--stroke-control);
+      border-radius: 6px;
+      background: var(--control-fill-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.73rem;
+    }
+    #twitter-search-app .status-item span{ color: var(--text-primary); }
+
+    #twitter-search-app button:focus-visible,
+#twitter-search-app input:focus-visible{
+      outline: 2px solid var(--accent-default);
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 900px) {
+      #twitter-search-app{ overflow: auto; }
+      #twitter-search-app .container{ min-height: 100%; height: auto; }
+      #twitter-search-app .layout-wrapper{ flex-direction: column; overflow: visible; padding: 0.8rem 1rem 0.9rem; }
+      #twitter-search-app .left-panel,
+#twitter-search-app .right-panel{ overflow: visible; }
+      #twitter-search-app .preview-card{ min-height: 170px; }
+    }
+
+    @media (max-width: 560px) {
+      #twitter-search-app header{ padding: 0.95rem 1rem 0.85rem; }
+      #twitter-search-app h1,
+#twitter-search-app .subtitle{ padding-right: 48px; }
+      #twitter-search-app .theme-toggle-btn{ right: 1rem; }
+      #twitter-search-app .left-panel,
+#twitter-search-app .right-panel{ padding: 0.9rem; }
+      #twitter-search-app .author-actions{ grid-template-columns: 1fr; }
+      #twitter-search-app .status-bar{ justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #twitter-search-app *,
+#twitter-search-app *::before,
+#twitter-search-app *::after{
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  
+  </style>
+
+  <style id="integration-styles">
+
+    /* Integrated real-DOM layout: app roots replace the former iframe documents. */
+    .tab-panel {
+      overflow: hidden;
+    }
+
+    .tab-panel[hidden] {
+      display: none;
+    }
+
+    #thread-tailor-app,
+    #twitter-search-app {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #thread-tailor-app > .container,
+    #twitter-search-app > .container {
+      width: 100%;
+      height: 100%;
+    }
+
+  </style>
 </head>
 <body>
+  <div class="app-shell">
+    <nav class="tab-bar" role="tablist" aria-label="기능 선택">
+      <button class="tab-button" id="tab-thread-tailor" type="button" role="tab" aria-selected="true" aria-controls="panel-thread-tailor" tabindex="0" data-panel="panel-thread-tailor">타래 재단사</button>
+      <button class="tab-button" id="tab-twitter-search" type="button" role="tab" aria-selected="false" aria-controls="panel-twitter-search" tabindex="-1" data-panel="panel-twitter-search">트위터검색</button>
+    </nav>
 
-    <div class="container">
-        <header>
-            <h1 id="appTitle">✂️ 타래 재단사</h1>
-            <p class="subtitle">긴 글을 🔒서버 전송 없이 안전하게 타래로 재단해드려요. (제작: @lunamoth & Gemini 3.0 Pro | <a href="https://github.com/lunamoth/tt" target="_blank" rel="noopener noreferrer">소스 코드</a>)</p>
-            <button class="theme-toggle-btn" id="themeToggle" aria-label="다크 모드 전환" title="다크 모드 전환 (Alt + D)">
+    <main class="tab-panels">
+      <!-- Base64/iframe 없이 실제 타래 재단사 HTML -->
+      <section class="tab-panel" id="panel-thread-tailor" role="tabpanel" aria-labelledby="tab-thread-tailor">
+        <div id="thread-tailor-app" data-theme="light">
+
+<div class="container">
+<header>
+<h1 id="tt-appTitle">✂️ 타래 재단사</h1>
+<p class="subtitle">긴 글을 🔒서버 전송 없이 안전하게 타래로 재단해드려요. (제작: @lunamoth &amp; Gemini 3.0 Pro, GPT 5.6 Sol | <a href="https://github.com/lunamoth/tt" rel="noopener noreferrer" target="_blank">소스 코드</a>)</p>
+<button aria-label="다크 모드 전환" class="theme-toggle-btn" id="tt-themeToggle" title="다크 모드 전환 (Alt + D)">
                 🌙
             </button>
-        </header>
+</header>
+<div class="layout-wrapper">
+<!-- 왼쪽 패널: 입력 및 설정 -->
+<div class="left-panel">
+<div class="preset-wrapper">
+<label>✨ 플랫폼 선택 (자동 설정)</label>
+<div class="preset-buttons" id="tt-presetContainer">
+<button class="preset-btn active" data-preset="bluesky" id="tt-btn-bluesky">
+<span class="preset-title">🦋 블루스카이</span>
+<span class="preset-meta"><span class="limit-badge">(300자)</span> <span class="kbd-hint">Alt+B</span></span>
+</button>
+<button class="preset-btn" data-preset="twitter" id="tt-btn-twitter">
+<span class="preset-title">🐦 트위터</span>
+<span class="preset-meta"><span class="limit-badge">(280자)</span> <span class="kbd-hint">Alt+X</span></span>
+</button>
+<button class="preset-btn" data-preset="threads" id="tt-btn-threads">
+<span class="preset-title">🧵 스레드</span>
+<span class="preset-meta"><span class="limit-badge">(500자)</span> <span class="kbd-hint">Alt+T</span></span>
+</button>
+</div>
+</div>
+<div class="controls" id="tt-controlsContainer">
+<div class="input-group">
+<label for="tt-limit">📏 제한 글자수</label>
+<input id="tt-limit" max="2000" min="10" type="number" value="300"/>
+</div>
+<div class="input-group">
+<label for="tt-numberFormat">🔢 번호 서식</label>
+<select id="tt-numberFormat">
+<option selected="" value="thread">(🧵1/n)</option>
+<option value="memo">(📝1/n)</option>
+<option value="finger">(👇1/n)</option>
+<option value="google">구글 트위터 방식</option>
+<option value="korean_cont">(위에서 이어짐) (계속)</option>
+<option value="bracket">[1/n]</option>
+<option value="simple">1/n</option>
+<option value="paren">(1/n)</option>
+<option value="link_bottom">링크 하단</option>
+<option value="custom">직접 입력...</option>
+</select>
+<input id="tt-customFormatInput" placeholder="예: {current}/{total} 페이지" type="text"/>
+</div>
+<div class="input-group">
+<label for="tt-position">📍 번호 위치</label>
+<select id="tt-position">
+<option value="front">글 앞 (🧵1/n)</option>
+<option selected="" value="back">글 뒤 (🧵1/n)</option>
+</select>
+</div>
+<div class="input-group">
+<label for="tt-paragraphMode">📄 문단 유지</label>
+<select id="tt-paragraphMode">
+<option selected="" value="on">켜기 (기본)</option>
+<option value="off">끄기 (꽉 채우기)</option>
+</select>
+</div>
+<div class="input-group">
+<label for="tt-urlMode">🔗 URL 단축</label>
+<select id="tt-urlMode">
+<option selected="" value="off">사용 안 함</option>
+<option value="twitter">23자로 계산 (t.co)</option>
+<option value="bluesky">스마트 단축 (Bluesky)</option>
+</select>
+</div>
+</div>
+<textarea id="tt-inputText" maxlength="50000" placeholder="여기에 긴 글을 붙여넣거나 .txt 파일을 드래그하세요... 📝
+나머지는 제가 알아서 할게요!"></textarea>
+<div class="action-area">
+<div style="display: flex; flex-direction: column; gap: 2px;">
+<div class="char-count" id="tt-totalCount">현재: 0자</div>
+<div id="tt-twitterCount" style="color: #1d9bf0; display: none;">🐦 트위터: 0자</div>
+<div id="tt-bskyCount" style="color: #0085ff; display: none;">🦋 블루스카이: 0자</div>
+</div>
+<div class="buttons-group">
+<input accept=".txt,text/plain" hidden="" id="tt-fileInput" type="file"/>
+<button class="file-btn" id="tt-btn-file"><span class="btn-title">📂 파일</span><span class="btn-meta"><span class="kbd-hint">Ctrl+O</span></span></button>
+<button class="reset-btn" id="tt-btn-reset"><span class="btn-title">🔄 초기화</span><span class="btn-meta"><span class="kbd-hint">Alt+Del</span></span></button>
+<button class="split-btn" id="tt-btn-split"><span class="btn-title">자르기 ⚡️</span><span class="btn-meta"><span class="kbd-hint">Ctrl+Enter</span></span></button>
+</div>
+</div>
+</div>
+<!-- 오른쪽 패널: 결과 영역 -->
+<div class="right-panel">
+<div class="results" id="tt-resultsArea">
+<div class="empty-state">
+<div>왼쪽에 글을 입력하면<br/>여기에 결과가 표시됩니다.</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 상태 표시줄 -->
+<div class="status-bar" id="tt-statusBar">
+<div class="status-item">📊 글자 수: <span>0자</span></div>
+<div class="status-item">📝 단어 수: <span>0개</span></div>
+<div class="status-item">📑 줄 수: <span>0줄</span></div>
+<div class="status-item">¶ 문단 수: <span>0개</span></div>
+<div class="status-item">⏱️ 예상 읽기: <span>0초</span></div>
+<div class="status-item">🧵 생성된 타래: <span>0개</span></div>
+</div>
+</div>
+<div id="tt-toast">✅ 복사 완료!</div>
 
-        <div class="layout-wrapper">
-            <!-- 왼쪽 패널: 입력 및 설정 -->
-            <div class="left-panel">
-                
-                <div class="preset-wrapper">
-                    <label>✨ 플랫폼 선택 (자동 설정)</label>
-                    <div class="preset-buttons" id="presetContainer">
-                        <button id="btn-bluesky" class="preset-btn active" data-preset="bluesky">
-                            <span class="preset-title">🦋 블루스카이</span>
-                            <span class="preset-meta"><span class="limit-badge">(300자)</span> <span class="kbd-hint">Alt+B</span></span>
-                        </button>
-                        <button id="btn-twitter" class="preset-btn" data-preset="twitter">
-                            <span class="preset-title">🐦 트위터</span>
-                            <span class="preset-meta"><span class="limit-badge">(280자)</span> <span class="kbd-hint">Alt+X</span></span>
-                        </button>
-                        <button id="btn-threads" class="preset-btn" data-preset="threads">
-                            <span class="preset-title">🧵 스레드</span>
-                            <span class="preset-meta"><span class="limit-badge">(500자)</span> <span class="kbd-hint">Alt+T</span></span>
-                        </button>
-                    </div>
-                </div>
 
-                <div class="controls" id="controlsContainer">
-                    <div class="input-group">
-                        <label for="limit">📏 제한 글자수</label>
-                        <input type="number" id="limit" value="300" min="10" max="2000">
-                    </div>
-
-                    <div class="input-group">
-                        <label for="numberFormat">🔢 번호 서식</label>
-                        <select id="numberFormat">
-                            <option value="thread" selected>(🧵1/n)</option>
-                            <option value="memo">(📝1/n)</option>
-                            <option value="finger">(👇1/n)</option>
-                            <option value="google">구글 트위터 방식</option>
-                            <option value="korean_cont">(위에서 이어짐) (계속)</option>
-                            <option value="bracket">[1/n]</option>
-                            <option value="simple">1/n</option>
-                            <option value="paren">(1/n)</option>
-                            <option value="link_bottom">링크 하단</option>
-                            <option value="custom">직접 입력...</option>
-                        </select>
-                        <input type="text" id="customFormatInput" placeholder="예: {current}/{total} 페이지">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="position">📍 번호 위치</label>
-                        <select id="position">
-                            <option value="front">글 앞 (🧵1/n)</option>
-                            <option value="back" selected>글 뒤 (🧵1/n)</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="paragraphMode">📄 문단 유지</label>
-                        <select id="paragraphMode">
-                            <option value="on" selected>켜기 (기본)</option>
-                            <option value="off">끄기 (꽉 채우기)</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="urlMode">🔗 URL 단축</label>
-                        <select id="urlMode">
-                            <option value="off" selected>사용 안 함</option>
-                            <option value="twitter">23자로 계산 (t.co)</option>
-                            <option value="bluesky">스마트 단축 (Bluesky)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <textarea id="inputText" maxlength="50000" placeholder="여기에 긴 글을 붙여넣거나 .txt 파일을 드래그하세요... 📝&#10;나머지는 제가 알아서 할게요!"></textarea>
-
-                <div class="action-area">
-                    <div style="display: flex; flex-direction: column; gap: 2px;">
-                        <div class="char-count" id="totalCount">현재: 0자</div>
-                        <div id="twitterCount" style="color: #1d9bf0; display: none;">🐦 트위터: 0자</div>
-                        <div id="bskyCount" style="color: #0085ff; display: none;">🦋 블루스카이: 0자</div>
-                    </div>
-                    <div class="buttons-group">
-                        <input type="file" id="fileInput" hidden accept=".txt,text/plain">
-                        <button class="file-btn" id="btn-file"><span class="btn-title">📂 파일</span><span class="btn-meta"><span class="kbd-hint">Ctrl+O</span></span></button>
-                        <button class="reset-btn" id="btn-reset"><span class="btn-title">🔄 초기화</span><span class="btn-meta"><span class="kbd-hint">Alt+Del</span></span></button>
-                        <button class="split-btn" id="btn-split"><span class="btn-title">자르기 ⚡️</span><span class="btn-meta"><span class="kbd-hint">Ctrl+Enter</span></span></button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 오른쪽 패널: 결과 영역 -->
-            <div class="right-panel">
-                <div class="results" id="resultsArea">
-                    <div class="empty-state">
-                        <div>왼쪽에 글을 입력하면<br>여기에 결과가 표시됩니다.</div>
-                    </div>
-                </div>
-            </div>
         </div>
+      </section>
 
-        <!-- 상태 표시줄 -->
-        <div class="status-bar" id="statusBar">
-            <div class="status-item">📊 글자 수: <span>0자</span></div>
-            <div class="status-item">📝 단어 수: <span>0개</span></div>
-            <div class="status-item">📑 줄 수: <span>0줄</span></div>
-            <div class="status-item">¶ 문단 수: <span>0개</span></div>
-            <div class="status-item">⏱️ 예상 읽기: <span>0초</span></div>
-            <div class="status-item">🧵 생성된 타래: <span>0개</span></div>
+      <!-- Base64/iframe 없이 실제 트위터 검색 HTML -->
+      <section class="tab-panel" id="panel-twitter-search" role="tabpanel" aria-labelledby="tab-twitter-search" hidden>
+        <div id="twitter-search-app" data-theme="light">
+
+<div class="container">
+<header>
+<h1>🐦 트위터 글 구글 검색</h1>
+<p class="subtitle">작성자 아이디와 검색어를 입력하면 해당 작성자의 트위터(X) 글을 구글 검색 새 탭으로 엽니다. 🔒 입력 정보는 서버로 전송하거나 별도로 수집하지 않습니다.</p>
+<button aria-label="다크 모드 전환" class="theme-toggle-btn" id="tw-themeToggle" title="다크 모드 전환 (Alt + D)" type="button">🌙</button>
+</header>
+<div class="layout-wrapper">
+<section aria-labelledby="tw-searchSettingsTitle" class="left-panel">
+<h2 class="section-title" id="tw-searchSettingsTitle">🔎 검색 설정</h2>
+<p class="section-description">작성자 아이디는 이 브라우저의 로컬 저장소에 저장하거나 언제든 삭제할 수 있습니다.</p>
+<form autocomplete="off" id="tw-searchForm" novalidate="">
+<div class="field-group">
+<label for="tw-authorId">👤 작성자 아이디</label>
+<input aria-describedby="tw-authorHelp tw-storageStatus tw-queryPreview" autocapitalize="none" autocomplete="off" autofocus="" id="tw-authorId" inputmode="text" name="authorId" placeholder="예: lunamoth 또는 @lunamoth" required="" spellcheck="false" type="search"/>
+<p class="field-help" id="tw-authorHelp">@아이디 또는 x.com 프로필 주소를 입력할 수 있습니다.</p>
+</div>
+<div class="author-actions">
+<button class="secondary-button" id="tw-saveAuthorButton" type="button">💾 아이디 저장</button>
+<button class="delete-button" id="tw-deleteAuthorButton" type="button">🗑️ 저장 아이디 삭제</button>
+</div>
+<p aria-live="polite" class="storage-status" id="tw-storageStatus" role="status"></p>
+<div class="field-group">
+<label for="tw-keyword">📝 검색어</label>
+<input aria-describedby="tw-queryPreview" autocomplete="off" id="tw-keyword" inputmode="search" name="keyword" placeholder="예: 게임 엔딩" required="" type="search"/>
+</div>
+<div class="search-actions">
+<button class="primary-button" type="submit">🔎 구글에서 검색</button>
+</div>
+</form>
+</section>
+<section aria-labelledby="tw-previewTitle" class="right-panel">
+<h2 class="section-title" id="tw-previewTitle">✨ 검색식 미리보기</h2>
+<p class="section-description">입력 내용에 따라 실제 구글 검색에 사용할 검색식이 실시간으로 표시됩니다.</p>
+<div class="preview-card">
+<div class="preview-card-header">
+<span class="preview-card-title">Google 검색 쿼리</span>
+<span class="badge">X 게시물</span>
+</div>
+<p aria-live="polite" class="preview" id="tw-queryPreview">검색식:<code>site:x.com/작성자아이디/status 검색어</code></p>
+<p class="privacy-note">🔒 저장 버튼을 누른 작성자 아이디만 브라우저 로컬 저장소에 보관됩니다. 검색어는 저장하지 않습니다.</p>
+</div>
+</section>
+</div>
+<footer aria-label="상태 정보" class="status-bar">
+<div class="status-item">검색 대상 <span>x.com/status</span></div>
+<div class="status-item">아이디 저장 <span>로컬 브라우저</span></div>
+</footer>
+</div>
+
+
         </div>
+      </section>
+    </main>
+  </div>
 
-    </div>
+  <!-- Shared integration and theme code -->
+  <script id="shared-integration-script">
 
-    <div id="toast">✅ 복사 완료!</div>
+    'use strict';
 
-    <script>
+    const THREAD_SETTINGS_KEY = 'threadTailorSettings';
+    const shellRoot = document.documentElement;
+    const threadApp = document.getElementById('thread-tailor-app');
+    const twitterApp = document.getElementById('twitter-search-app');
+    const threadGetElementById = (id) => document.getElementById(`tt-${id}`);
+    const twitterGetElementById = (id) => document.getElementById(`tw-${id}`);
+
+    // 단일 APP_VERSION 값을 문서의 모든 버전 표시에 반영합니다.
+    document.documentElement.dataset.appVersion = APP_VERSION;
+    document.querySelector('meta[name="app-version"]').content = APP_VERSION;
+
+    function normalizeTheme(theme) {
+      return theme === 'dark' ? 'dark' : 'light';
+    }
+
+    function readStoredTheme() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(THREAD_SETTINGS_KEY) || '{}');
+        if (saved.theme === 'dark' || saved.theme === 'light') return saved.theme;
+      } catch (error) {}
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function saveThemeDirectly(theme) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(THREAD_SETTINGS_KEY) || '{}');
+        saved.theme = normalizeTheme(theme);
+        localStorage.setItem(THREAD_SETTINGS_KEY, JSON.stringify(saved));
+      } catch (error) {}
+    }
+
+    function applyUnifiedTheme(theme) {
+      const normalized = normalizeTheme(theme);
+      shellRoot.setAttribute('data-theme', normalized);
+      twitterApp.setAttribute('data-theme', normalized);
+
+      const twitterToggle = twitterGetElementById('themeToggle');
+      if (twitterToggle) {
+        twitterToggle.textContent = normalized === 'dark' ? '☀️' : '🌙';
+        twitterToggle.setAttribute('aria-label', normalized === 'dark' ? '라이트 모드 전환' : '다크 모드 전환');
+      }
+    }
+
+    window.ThreadTailorTheme = Object.freeze({
+      set(theme) {
+        const normalized = normalizeTheme(theme);
+        applyUnifiedTheme(normalized);
+
+        const current = threadApp.getAttribute('data-theme');
+        const threadToggle = threadGetElementById('themeToggle');
+        if (threadToggle && current !== normalized) {
+          threadToggle.click();
+        } else {
+          threadApp.setAttribute('data-theme', normalized);
+          saveThemeDirectly(normalized);
+        }
+      },
+      sync(theme) {
+        applyUnifiedTheme(theme);
+      }
+    });
+
+    new MutationObserver(() => {
+      applyUnifiedTheme(threadApp.getAttribute('data-theme'));
+    }).observe(threadApp, { attributes: true, attributeFilter: ['data-theme'] });
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === THREAD_SETTINGS_KEY) {
+        window.ThreadTailorTheme.set(readStoredTheme());
+      }
+    });
+
+    applyUnifiedTheme(readStoredTheme());
+
+  </script>
+
+  <!-- Actual Thread Tailor JavaScript -->
+  <script id="thread-tailor-script">
+  (() => {
+
         (function() {
             "use strict";
 
             // 1. 상수 및 설정 관리
             const CONFIG = {
-                VERSION: "타래 재단사 8.4 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기",
+                VERSION: `타래 재단사 ${APP_VERSION} - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기`,
                 STORAGE_KEY: "threadTailorSettings",
                 DRAFT_KEY: "threadTailorDraft",
                 LIMITS: { MIN: 10, MAX: 2000, BLUESKY: 300, TWITTER: 280, THREADS: 500 },
@@ -1114,28 +1984,28 @@
             class DOMHelper {
                 static getElements() {
                     return {
-                        html: document.documentElement,
-                        appTitle: document.getElementById('appTitle'),
-                        inputText: document.getElementById('inputText'),
-                        limitInput: document.getElementById('limit'),
-                        positionSelect: document.getElementById('position'),
-                        paragraphModeSelect: document.getElementById('paragraphMode'),
-                        numberFormatSelect: document.getElementById('numberFormat'),
-                        customFormatInput: document.getElementById('customFormatInput'),
-                        urlModeSelect: document.getElementById('urlMode'),
-                        resultsArea: document.getElementById('resultsArea'),
-                        totalCount: document.getElementById('totalCount'),
-                        bskyCount: document.getElementById('bskyCount'),
-                        twitterCount: document.getElementById('twitterCount'),
-                        toast: document.getElementById('toast'),
-                        presetContainer: document.getElementById('presetContainer'),
-                        controlsContainer: document.getElementById('controlsContainer'),
-                        btnReset: document.getElementById('btn-reset'),
-                        btnSplit: document.getElementById('btn-split'),
-                        btnFile: document.getElementById('btn-file'),
-                        fileInput: document.getElementById('fileInput'),
-                        themeToggle: document.getElementById('themeToggle'),
-                        statusBar: document.getElementById('statusBar')
+                        html: threadApp,
+                        appTitle: threadGetElementById('appTitle'),
+                        inputText: threadGetElementById('inputText'),
+                        limitInput: threadGetElementById('limit'),
+                        positionSelect: threadGetElementById('position'),
+                        paragraphModeSelect: threadGetElementById('paragraphMode'),
+                        numberFormatSelect: threadGetElementById('numberFormat'),
+                        customFormatInput: threadGetElementById('customFormatInput'),
+                        urlModeSelect: threadGetElementById('urlMode'),
+                        resultsArea: threadGetElementById('resultsArea'),
+                        totalCount: threadGetElementById('totalCount'),
+                        bskyCount: threadGetElementById('bskyCount'),
+                        twitterCount: threadGetElementById('twitterCount'),
+                        toast: threadGetElementById('toast'),
+                        presetContainer: threadGetElementById('presetContainer'),
+                        controlsContainer: threadGetElementById('controlsContainer'),
+                        btnReset: threadGetElementById('btn-reset'),
+                        btnSplit: threadGetElementById('btn-split'),
+                        btnFile: threadGetElementById('btn-file'),
+                        fileInput: threadGetElementById('fileInput'),
+                        themeToggle: threadGetElementById('themeToggle'),
+                        statusBar: threadGetElementById('statusBar')
                     };
                 }
 
@@ -1221,7 +2091,7 @@
                     textArea.style.left = "-9999px";
                     textArea.style.top = "0";
                     textArea.setAttribute("readonly", "");
-                    document.body.appendChild(textArea);
+                    threadApp.appendChild(textArea);
                     
                     if (navigator.userAgent.match(/ipad|iphone/i)) {
                         const range = document.createRange();
@@ -1236,7 +2106,7 @@
 
                     let success = false;
                     try { success = document.execCommand('copy'); } catch (err) { success = false; }
-                    document.body.removeChild(textArea);
+                    threadApp.removeChild(textArea);
                     return success;
                 }
 
@@ -1584,7 +2454,7 @@
                     this.initDragAndDrop();
                     
                     DOMHelper.setText(this.dom.appTitle, "✂️ " + CONFIG.VERSION);
-                    document.title = "✂️ " + CONFIG.VERSION;
+                    threadApp.dataset.documentTitle = "✂️ " + CONFIG.VERSION;
 
                     if (this.dom.inputText.value) {
                         this.processText(true);
@@ -1625,7 +2495,7 @@
 
                     this.dom.presetContainer.querySelectorAll('.preset-btn').forEach(b => DOMHelper.setClass(b, 'active', false));
                     if (activePreset) {
-                        const target = document.getElementById(`btn-${activePreset}`);
+                        const target = threadGetElementById(`btn-${activePreset}`);
                         DOMHelper.setClass(target, 'active', true);
                     }
                     return activePreset;
@@ -1740,6 +2610,10 @@
                     });
 
                     document.addEventListener('keydown', (e) => {
+                        // 타래 재단사 탭이 활성화된 동안에는 포커스 위치와 관계없이 전역 단축키를 처리합니다.
+                        const threadPanel = document.getElementById('panel-thread-tailor');
+                        if (!threadPanel || threadPanel.hidden) return;
+
                         // Global Keyboard Shortcuts
                         
                         // Ctrl + Enter: Split
@@ -1821,7 +2695,7 @@
                     const prevent = e => { e.preventDefault(); e.stopPropagation(); };
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
                         zone.addEventListener(e, prevent);
-                        document.body.addEventListener(e, prevent);
+                        threadApp.addEventListener(e, prevent);
                     });
                     
                     zone.addEventListener('dragenter', () => DOMHelper.setClass(zone, 'drag-over', true));
@@ -2042,7 +2916,7 @@
                 }
 
                 static showToast(msg) {
-                    const toast = document.getElementById('toast');
+                    const toast = threadGetElementById('toast');
                     if (toast.timer) clearTimeout(toast.timer);
                     DOMHelper.setClass(toast, "show", false);
                     void toast.offsetWidth;
@@ -2055,6 +2929,231 @@
             new AppController();
 
         })();
-    </script>
+    
+  })();
+  </script>
+
+  <!-- Actual Twitter Search JavaScript -->
+  <script id="twitter-search-script">
+  (() => {
+
+    'use strict';
+
+    const STORAGE_KEY = 'twitterSearch.savedAuthorId';
+    const THREAD_SETTINGS_KEY = 'threadTailorSettings';
+
+    const html = twitterApp;
+    const form = twitterGetElementById('searchForm');
+    const authorInput = twitterGetElementById('authorId');
+    const keywordInput = twitterGetElementById('keyword');
+    const saveAuthorButton = twitterGetElementById('saveAuthorButton');
+    const deleteAuthorButton = twitterGetElementById('deleteAuthorButton');
+    const storageStatus = twitterGetElementById('storageStatus');
+    const queryPreview = twitterGetElementById('queryPreview');
+    const themeToggle = twitterGetElementById('themeToggle');
+
+    function normalizeAuthorId(value) {
+      let authorId = value.trim();
+      authorId = authorId.replace(/^@+/, '');
+      authorId = authorId.replace(/^https?:\/\/(?:www\.)?(?:x|twitter)\.com\//i, '');
+      authorId = authorId.split(/[/?#]/, 1)[0];
+      return authorId.trim();
+    }
+
+    function isValidAuthorId(authorId) {
+      return /^[A-Za-z0-9_]{1,15}$/.test(authorId);
+    }
+
+    function makeQuery(authorId, keyword) {
+      return `site:x.com/${authorId}/status ${keyword}`;
+    }
+
+    function setStatus(message, state = '') {
+      storageStatus.textContent = message;
+      storageStatus.dataset.state = state;
+    }
+
+    function updatePreview() {
+      const authorId = normalizeAuthorId(authorInput.value) || '작성자아이디';
+      const keyword = keywordInput.value.trim() || '검색어';
+      queryPreview.replaceChildren(
+        document.createTextNode('검색식:'),
+        Object.assign(document.createElement('code'), { textContent: makeQuery(authorId, keyword) })
+      );
+    }
+
+    function getValidatedAuthorId() {
+      const authorId = normalizeAuthorId(authorInput.value);
+
+      if (!authorId) {
+        setStatus('작성자 아이디를 입력해주세요.', 'error');
+        authorInput.focus();
+        return null;
+      }
+
+      if (!isValidAuthorId(authorId)) {
+        setStatus('작성자 아이디는 영문, 숫자, 밑줄(_)을 사용해 1~15자로 입력해주세요.', 'error');
+        authorInput.focus();
+        authorInput.select();
+        return null;
+      }
+
+      authorInput.value = authorId;
+      updatePreview();
+      return authorId;
+    }
+
+    function loadSavedAuthorId() {
+      try {
+        const savedAuthorId = localStorage.getItem(STORAGE_KEY);
+        if (savedAuthorId && isValidAuthorId(savedAuthorId)) {
+          authorInput.value = savedAuthorId;
+          setStatus(`저장된 아이디 @${savedAuthorId}을(를) 불러왔습니다.`, 'success');
+          keywordInput.focus();
+        }
+      } catch (error) {
+        setStatus('브라우저 설정으로 인해 저장된 아이디를 불러올 수 없습니다.', 'error');
+      }
+      updatePreview();
+    }
+
+    function saveAuthorId() {
+      const authorId = getValidatedAuthorId();
+      if (!authorId) return;
+      try {
+        localStorage.setItem(STORAGE_KEY, authorId);
+        setStatus(`@${authorId} 아이디를 이 브라우저에 저장했습니다.`, 'success');
+        keywordInput.focus();
+      } catch (error) {
+        setStatus('브라우저 설정으로 인해 아이디를 저장할 수 없습니다.', 'error');
+      }
+    }
+
+    function deleteSavedAuthorId() {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        authorInput.value = '';
+        setStatus('저장된 작성자 아이디를 삭제했습니다.', 'success');
+        updatePreview();
+        authorInput.focus();
+      } catch (error) {
+        setStatus('브라우저 설정으로 인해 저장된 아이디를 삭제할 수 없습니다.', 'error');
+      }
+    }
+
+    function applyTheme(theme) {
+      const normalizedTheme = theme === 'dark' ? 'dark' : 'light';
+      html.setAttribute('data-theme', normalizedTheme);
+      themeToggle.textContent = normalizedTheme === 'dark' ? '☀️' : '🌙';
+      themeToggle.setAttribute('aria-label', normalizedTheme === 'dark' ? '라이트 모드 전환' : '다크 모드 전환');
+    }
+
+    function readThreadTheme() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(THREAD_SETTINGS_KEY) || '{}');
+        if (saved.theme === 'dark' || saved.theme === 'light') return saved.theme;
+      } catch (error) {}
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function requestThemeChange() {
+      const nextTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(nextTheme);
+      window.ThreadTailorTheme.set(nextTheme);
+    }
+
+    authorInput.addEventListener('input', () => {
+      setStatus('');
+      updatePreview();
+    });
+
+    authorInput.addEventListener('blur', () => {
+      const authorId = normalizeAuthorId(authorInput.value);
+      if (authorId) {
+        authorInput.value = authorId;
+        updatePreview();
+      }
+    });
+
+    keywordInput.addEventListener('input', updatePreview);
+    saveAuthorButton.addEventListener('click', saveAuthorId);
+    deleteAuthorButton.addEventListener('click', deleteSavedAuthorId);
+    themeToggle.addEventListener('click', requestThemeChange);
+
+    twitterApp.addEventListener('keydown', (event) => {
+      if (event.altKey && event.key.toLowerCase() === 'd') {
+        event.preventDefault();
+        requestThemeChange();
+      }
+    });
+window.addEventListener('storage', (event) => {
+      if (event.key === THREAD_SETTINGS_KEY) applyTheme(readThreadTheme());
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const authorId = getValidatedAuthorId();
+      if (!authorId) return;
+
+      const keyword = keywordInput.value.trim();
+      if (!keyword) {
+        setStatus('검색어를 입력해주세요.', 'error');
+        keywordInput.focus();
+        return;
+      }
+
+      setStatus('');
+      const query = makeQuery(authorId, keyword);
+      const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+      window.open(googleUrl, '_blank', 'noopener,noreferrer');
+    });
+
+    applyTheme(readThreadTheme());
+    loadSavedAuthorId();
+  
+  })();
+  </script>
+
+  <!-- Accessible tab behavior -->
+  <script id="tab-script">
+
+    const tabs = Array.from(document.querySelectorAll('.tab-bar [role="tab"]'));
+    const panels = Array.from(document.querySelectorAll('.tab-panels > .tab-panel'));
+
+    function activateTab(tab, moveFocus = false) {
+      for (const candidate of tabs) {
+        const isActive = candidate === tab;
+        candidate.setAttribute('aria-selected', String(isActive));
+        candidate.tabIndex = isActive ? 0 : -1;
+      }
+
+      for (const panel of panels) {
+        panel.hidden = panel.id !== tab.dataset.panel;
+      }
+
+      if (moveFocus) tab.focus();
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => activateTab(tab));
+      tab.addEventListener('keydown', (event) => {
+        let nextIndex = null;
+        if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+        else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+        else if (event.key === 'Home') nextIndex = 0;
+        else if (event.key === 'End') nextIndex = tabs.length - 1;
+
+        if (nextIndex !== null) {
+          event.preventDefault();
+          activateTab(tabs[nextIndex], true);
+        }
+      });
+    });
+
+    // Final synchronization after both real-DOM applications have initialized.
+    window.ThreadTailorTheme.sync(threadApp.getAttribute('data-theme') || readStoredTheme());
+
+  </script>
 </body>
 </html>
