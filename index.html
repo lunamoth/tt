@@ -6,7 +6,7 @@
 
   <!-- 앱 버전: 앞으로는 아래 값 하나만 변경하면 됩니다. -->
   <script id="app-version-config">
-    const APP_VERSION = '10.10';
+    const APP_VERSION = '11.0';
   </script>
 
   <meta name="description" content="✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기 + 트위터 검색기">
@@ -1876,18 +1876,18 @@
 <div class="container">
 <header>
 <h1>🐦 트위터 글 구글 검색</h1>
-<p class="subtitle">작성자 아이디와 검색어를 입력하면 해당 작성자의 트위터(X) 글을 구글 검색 새 탭으로 엽니다. 🔒 입력 정보는 서버로 전송하거나 별도로 수집하지 않습니다.</p>
+<p class="subtitle">검색어로 트위터(X) 글을 구글 검색 새 탭에서 찾습니다. 작성자 아이디를 입력하면 해당 작성자의 글만, 비워두면 x.com 전체를 검색합니다. 🔒 입력 정보는 서버로 전송하거나 별도로 수집하지 않습니다.</p>
 <button aria-label="다크 모드 전환" class="theme-toggle-btn" id="tw-themeToggle" title="다크 모드 전환 (Alt + D)" type="button">🌙</button>
 </header>
 <div class="layout-wrapper">
 <section aria-labelledby="tw-searchSettingsTitle" class="left-panel">
 <h2 class="section-title" id="tw-searchSettingsTitle">🔎 검색 설정</h2>
-<p class="section-description">작성자 아이디는 이 브라우저의 로컬 저장소에 저장하거나 언제든 삭제할 수 있습니다.</p>
+<p class="section-description">작성자 아이디는 선택 사항이며, 자주 쓰는 아이디는 이 브라우저의 로컬 저장소에 저장하거나 언제든 삭제할 수 있습니다.</p>
 <form autocomplete="off" id="tw-searchForm" novalidate="">
 <div class="field-group">
 <label for="tw-authorId">👤 작성자 아이디</label>
-<input aria-describedby="tw-authorHelp tw-storageStatus tw-queryPreview" autocapitalize="none" autocomplete="off" autofocus="" id="tw-authorId" inputmode="text" name="authorId" placeholder="예: lunamoth 또는 @lunamoth" required="" spellcheck="false" type="search"/>
-<p class="field-help" id="tw-authorHelp">@아이디 또는 x.com 프로필 주소를 입력할 수 있습니다.</p>
+<input aria-describedby="tw-authorHelp tw-storageStatus tw-queryPreview" autocapitalize="none" autocomplete="off" autofocus="" id="tw-authorId" inputmode="text" name="authorId" placeholder="예: lunamoth 또는 @lunamoth" spellcheck="false" type="search"/>
+<p class="field-help" id="tw-authorHelp">💡 작성자 아이디를 비워두면 <strong>x.com 전체</strong>에서 검색합니다. @아이디 또는 x.com 프로필 주소도 입력할 수 있습니다.</p>
 </div>
 <div class="author-actions">
 <button class="secondary-button" id="tw-saveAuthorButton" type="button">💾 아이디 저장</button>
@@ -1911,13 +1911,13 @@
 <span class="preview-card-title">Google 검색 쿼리</span>
 <span class="badge">X 게시물</span>
 </div>
-<p aria-live="polite" class="preview" id="tw-queryPreview">검색식:<code>site:x.com/작성자아이디/status 검색어</code></p>
+<p aria-live="polite" class="preview" id="tw-queryPreview">검색식:<code>site:x.com 검색어</code></p>
 <p class="privacy-note">🔒 저장 버튼을 누른 작성자 아이디만 브라우저 로컬 저장소에 보관됩니다. 검색어는 저장하지 않습니다.</p>
 </div>
 </section>
 </div>
 <footer aria-label="상태 정보" class="status-bar">
-<div class="status-item">검색 대상 <span>x.com/status</span></div>
+<div class="status-item">검색 대상 <span>x.com 전체 / 작성자 글</span></div>
 <div class="status-item">아이디 저장 <span>로컬 브라우저</span></div>
 </footer>
 </div>
@@ -3034,7 +3034,8 @@
     }
 
     function makeQuery(authorId, keyword) {
-      return `site:x.com/${authorId}/status ${keyword}`;
+      const siteQuery = authorId ? `site:x.com/${authorId}/status` : 'site:x.com';
+      return `${siteQuery} ${keyword}`;
     }
 
     function setStatus(message, state = '') {
@@ -3043,7 +3044,7 @@
     }
 
     function updatePreview() {
-      const authorId = normalizeAuthorId(authorInput.value) || '작성자아이디';
+      const authorId = normalizeAuthorId(authorInput.value);
       const keyword = keywordInput.value.trim() || '검색어';
       queryPreview.replaceChildren(
         document.createTextNode('검색식:'),
@@ -3162,8 +3163,14 @@ window.addEventListener('storage', (event) => {
     form.addEventListener('submit', (event) => {
       event.preventDefault();
 
-      const authorId = getValidatedAuthorId();
-      if (!authorId) return;
+      const authorId = normalizeAuthorId(authorInput.value);
+      if (authorId && !isValidAuthorId(authorId)) {
+        setStatus('작성자 아이디는 영문, 숫자, 밑줄(_)을 사용해 1~15자로 입력해주세요.', 'error');
+        authorInput.focus();
+        authorInput.select();
+        return;
+      }
+      if (authorId) authorInput.value = authorId;
 
       const keyword = keywordInput.value.trim();
       if (!keyword) {
