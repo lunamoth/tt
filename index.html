@@ -6,7 +6,7 @@
 
   <!-- 앱 버전: 앞으로는 아래 값 하나만 변경하면 됩니다. -->
   <script id="app-version-config">
-    const APP_VERSION = '11.0';
+    const APP_VERSION = '11.1';
   </script>
 
   <meta name="description" content="✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기 + 트위터 검색기">
@@ -3196,19 +3196,43 @@ window.addEventListener('storage', (event) => {
 
     const tabs = Array.from(document.querySelectorAll('.tab-bar [role="tab"]'));
     const panels = Array.from(document.querySelectorAll('.tab-panels > .tab-panel'));
+    const defaultTab = document.getElementById('tab-thread-tailor');
+    const tabHashById = Object.freeze({
+      'tab-thread-tailor': '#tailor',
+      'tab-twitter-search': '#search'
+    });
+    const tabIdByHash = Object.freeze({
+      '#tailor': 'tab-thread-tailor',
+      '#search': 'tab-twitter-search'
+    });
 
-    function activateTab(tab, moveFocus = false) {
+    function updateTabHash(tab) {
+      const hash = tabHashById[tab.id];
+      if (hash && window.location.hash !== hash) {
+        window.history.replaceState(window.history.state, '', hash);
+      }
+    }
+
+    function activateTab(tab, moveFocus = false, updateHash = true) {
+      const targetTab = tab || defaultTab;
+
       for (const candidate of tabs) {
-        const isActive = candidate === tab;
+        const isActive = candidate === targetTab;
         candidate.setAttribute('aria-selected', String(isActive));
         candidate.tabIndex = isActive ? 0 : -1;
       }
 
       for (const panel of panels) {
-        panel.hidden = panel.id !== tab.dataset.panel;
+        panel.hidden = panel.id !== targetTab.dataset.panel;
       }
 
-      if (moveFocus) tab.focus();
+      if (updateHash) updateTabHash(targetTab);
+      if (moveFocus) targetTab.focus();
+    }
+
+    function activateTabFromHash() {
+      const tabId = tabIdByHash[window.location.hash.toLowerCase()];
+      activateTab(document.getElementById(tabId) || defaultTab, false, false);
     }
 
     tabs.forEach((tab, index) => {
@@ -3226,6 +3250,9 @@ window.addEventListener('storage', (event) => {
         }
       });
     });
+
+    window.addEventListener('hashchange', activateTabFromHash);
+    activateTabFromHash();
 
     // Final synchronization after both real-DOM applications have initialized.
     window.ThreadTailorTheme.sync(threadApp.getAttribute('data-theme') || readStoredTheme());
