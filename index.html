@@ -6,7 +6,7 @@
 
   <!-- 앱 버전: 앞으로는 아래 값 하나만 변경하면 됩니다. -->
   <script id="app-version-config">
-    const APP_VERSION = '11.2';
+    const APP_VERSION = '11.3';
   </script>
 
   <meta name="description" content="✂️ 타래 재단사 - 블루스카이, 트위터, 스레드를 위한 긴 글 자르기, 타래 생성기 + 트위터 검색기">
@@ -1744,16 +1744,24 @@
 
     /* Mobile: let the stacked layout scroll inside the fixed tab panel. */
     @media (max-width: 1100px) {
-      #thread-tailor-app {
+      #panel-thread-tailor {
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: contain;
       }
 
+      #thread-tailor-app {
+        display: block;
+        height: auto;
+        min-height: 100%;
+        overflow: visible;
+      }
+
       #thread-tailor-app > .container {
         height: auto;
         min-height: 100%;
+        overflow: visible;
       }
 
       #thread-tailor-app .layout-wrapper {
